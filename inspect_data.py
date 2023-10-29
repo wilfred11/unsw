@@ -9,7 +9,7 @@ from numpy import where
 from sklearn.datasets import make_classification
 from sklearn.cluster import Birch
 from matplotlib import pyplot
-from functions import numeric_features, data_dir
+from functions import numeric_features, data_dir, read_prepare_dir
 
 
 def crosstab_service_to_attack_cat(raw_data):
@@ -79,5 +79,5 @@ def find_clustering(raw_data):
 def inspect_for_empty_or_na_columns(raw_data):
     data_na = raw_data.isna().sum()
     data_empty = raw_data.eq('').sum()
-    data_na.to_csv(data_dir()+'/'+ 'columns_na_count.csv')
-    data_empty.to_csv(data_dir() + '/' + 'columns_empty_count.csv')
+    data_na.to_csv(read_prepare_dir()+'/'+ 'columns_na_count.csv')
+    data_empty.to_csv(read_prepare_dir() + '/' + 'columns_empty_count.csv')

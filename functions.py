@@ -46,6 +46,7 @@ def cleanup_project_dirs():
     os.makedirs(figures_dir(), exist_ok=True)
     os.makedirs(data_dir(), exist_ok=True)
     os.makedirs(test_classifiers_dir(), exist_ok=True)
+    os.makedirs(read_prepare_dir(), exist_ok=True)
 
 
 def external_data_dir():
@@ -62,6 +63,10 @@ def figures_dir():
 
 def test_classifiers_dir():
     return data_dir() + '/test_classifiers'
+
+
+def read_prepare_dir():
+    return data_dir() + '/read_prepare'
 
 
 def create_path(path):

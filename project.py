@@ -18,7 +18,9 @@ def test_classifiers(raw_data, test):
     scoring_values = ['fit_time', 'score_time', 'test_accuracy', 'test_precision', 'test_recall']
     results_pre = pd.DataFrame()
     results_post = pd.DataFrame()
-    params = pd.DataFrame()
+    params_svm_ = pd.DataFrame()
+    params_knn_ = pd.DataFrame()
+    params_lr_ = pd.DataFrame()
 
     for attack_cat in cats:
         print('**************************')
@@ -43,25 +45,38 @@ def test_classifiers(raw_data, test):
 
         svm_param_grid = [{'C': [0.5, 1, 10, 100], 'gamma': ['scale', 1, 0.1, 0.01, 0.001, 0.0001], 'kernel': ['rbf']}]
         opt_svm_params = grid_search(svm_classifier, svm_param_grid, X, y, 'svm', attack_cat)
+        params_svm = pd.DataFrame(opt_svm_params[0], index=[0])
+        params_svm_indexed = params_svm.set_index([pd.Series([attack_cat])])
+        params_svm_indexed.index.name = 'attack_cat'
+        params_svm_ = pd.concat([params_svm_, params_svm_indexed])
 
-        print(opt_svm_params[0])
-        print(opt_svm_params[1])
 
-        opt_svm_params[1].to_csv(test_classifiers_dir() + '/' + attack_cat + '_svm_' + 'optimal_params.csv')
+        #opt_svm_params[1].to_csv(test_classifiers_dir() + '/' + attack_cat + '_svm_' + 'optimal_params.csv')
         svm_classifier = svm.SVC(C=opt_svm_params[0]['C'], gamma=opt_svm_params[0]['gamma'],
                                  kernel=opt_svm_params[0]['kernel'])
 
         k_range = list(range(1, 31))
         knn_param_grid = dict(n_neighbors=k_range)
         opt_knn_params = grid_search(knn_classifier, knn_param_grid, X, y, 'knn', attack_cat)
-        opt_knn_params[1].to_csv(test_classifiers_dir() + '/' + attack_cat + '_knn_' + 'optimal_params.csv')
+
+        params_knn = pd.DataFrame(opt_knn_params[0], index=[0])
+        params_knn_indexed = params_knn.set_index([pd.Series([attack_cat])])
+        params_knn_indexed.index.name = 'attack_cat'
+        params_knn_ = pd.concat([params_knn_, params_knn_indexed])
+
+        #opt_knn_params[1].to_csv(test_classifiers_dir() + '/' + attack_cat + '_knn_' + 'optimal_params.csv')
 
         knn_classifier = KNeighborsClassifier(n_neighbors=opt_knn_params[0]['n_neighbors'])
 
         lr_param_grid = {"C": np.logspace(0.1, 3, 30), "penalty": ["l1", "l2"], 'max_iter': [800, 1000, 1200],
                          'solver': ['saga'], 'dual': [False], 'tol': [1e-3]}
         opt_lr_params = grid_search(lr_classifier, lr_param_grid, X, y, 'lr', attack_cat)
-        opt_lr_params[1].to_csv(test_classifiers_dir() + '/' + attack_cat + '_lr_' + 'optimal_params.csv')
+
+        params_lr = pd.DataFrame(opt_lr_params[0], index=[0])
+        params_lr_indexed = params_lr.set_index([pd.Series([attack_cat])])
+        params_lr_indexed.index.name = 'attack_cat'
+        params_lr_ = pd.concat([params_lr_, params_lr_indexed])
+        #opt_lr_params[1].to_csv(test_classifiers_dir() + '/' + attack_cat + '_lr_' + 'optimal_params.csv')
 
         lr_classifier = LogisticRegression(C=opt_lr_params[0]['C'], penalty=opt_lr_params[0]['penalty'],
                                            max_iter=opt_lr_params[0]['max_iter'], solver=opt_lr_params[0]['solver'],
@@ -83,6 +98,12 @@ def test_classifiers(raw_data, test):
     results_pre.to_excel(test_classifiers_dir() + '/' + 'clf_results_pre.xlsx')
     results_post.to_pickle(test_classifiers_dir() + '/' + 'clf_results_post.pkl')
     results_post.to_excel(test_classifiers_dir() + '/' + 'clf_results_post.xlsx')
+    params_lr_.to_excel(test_classifiers_dir()+ '/lr_params.xlsx')
+    params_knn_.to_excel(test_classifiers_dir() + '/knn_params.xlsx')
+    params_svm_.to_excel(test_classifiers_dir() + '/svm_params.xlsx')
+    params_lr_.to_pickle(test_classifiers_dir() + '/lr_params.pkl')
+    params_knn_.to_pickle(test_classifiers_dir() + '/knn_params.pkl')
+    params_svm_.to_pickle(test_classifiers_dir() + '/svm_params.pkl')
 
 
 def reduce_features(raw_data, test):

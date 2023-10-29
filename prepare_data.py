@@ -29,7 +29,7 @@ def filter_on_attack_cat(raw_data, attack_cat="Normal"):
 
 def prepare_data_for_specific_attack_cat(raw_data, attack_cat, test):
     if test:
-        half_max = 75
+        half_max = 50
     else:
         half_max = 100000
 
@@ -49,10 +49,10 @@ def prepare_data_for_specific_attack_cat(raw_data, attack_cat, test):
 
     X_normal_max = resample(X_normal, replace=False, n_samples=half_max, random_state=0)
 
-    if number_of_attack_cat <= half_max:
-        X_attack_max = resample(X_attack, replace=False, n_samples=half_max, random_state=0)
-    else:
+    if number_of_attack_cat < half_max:
         X_attack_max = resample(X_attack, replace=True, n_samples=half_max, random_state=0)
+    else:
+        X_attack_max = resample(X_attack, replace=False, n_samples=half_max, random_state=0)
 
     X_complete = pd.concat([X_attack_max, X_normal_max])
     raw_data_tmp = None
