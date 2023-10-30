@@ -1,6 +1,6 @@
 import pandas as pd
 from numpy import mean, std
-from sklearn.model_selection import KFold, cross_val_score, cross_validate
+from sklearn.model_selection import KFold, cross_val_score, cross_validate, StratifiedKFold
 from sklearn.model_selection import GridSearchCV
 from sklearn.feature_selection import RFECV
 from sklearn.feature_selection import SelectKBest, chi2
@@ -9,7 +9,7 @@ from sklearn.feature_selection import SelectKBest, chi2
 def classify(classifier, X, y, kind, attack_cat, after_opt=False):
     print('scoring ' + kind + ' ' + attack_cat)
     scoring = ['accuracy', 'precision', 'recall']
-    cv = KFold(n_splits=5,  shuffle=False)
+    cv = StratifiedKFold(n_splits=5,  shuffle=False)
     # scores = cross_val_score(classifier, X, y, scoring='accuracy', cv=cv, n_jobs=-1)
     scores = cross_validate(estimator=classifier, X=X, y=y, cv=cv, scoring=scoring, n_jobs=-1)
 
@@ -27,7 +27,7 @@ def classify(classifier, X, y, kind, attack_cat, after_opt=False):
 
 def grid_search(classifier, param_grid, X, y, kind, attack_cat):
     print('optimizing ' + kind + ' ' + attack_cat)
-    optimal_params = GridSearchCV(classifier, param_grid, cv=5, scoring='accuracy', verbose=0, n_jobs=-1)
+    optimal_params = GridSearchCV(classifier, param_grid, cv=5, scoring='f1_micro' , verbose=0, n_jobs=-1)
     optimal_params.fit(X, y)
     opt = pd.DataFrame(optimal_params.best_params_.items())
     opt.columns = ['param', 'value']

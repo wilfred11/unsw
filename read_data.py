@@ -2,6 +2,7 @@ import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from functions import empty_string_to_nan, irrelevant_features, external_data_dir, figures_dir, data_dir, \
     read_prepare_dir
 
@@ -35,7 +36,10 @@ def info(raw_data):
     rd_attacks = raw_data[raw_data['attack_cat'] != 'Normal']
     raw_data.attack_cat.value_counts(normalize=False).to_csv(read_prepare_dir() + '/' + 'attack_cat_counts.csv')
     print("\n")
-    rd_attacks.attack_cat.value_counts(normalize=False).plot(kind='bar', figsize=(10, 8))
+    #rd_attacks.attack_cat.value_counts(normalize=False).plot(kind='bar', figsize=(10, 8))
+    plt.figure(figsize=(12, 7))
+    #plt.grid()
+    sns.barplot(x=rd_attacks.attack_cat.value_counts().index, y=rd_attacks.attack_cat.value_counts()).set(title='Aantal aanvallen per soort')
     # sns.set(rc={"figure.figsize": (10, 8)})
     # print(rd_attacks.attack_cat.value_counts(normalize=False))
     # d=rd_attacks.attack_cat.value_counts(normalize=False)

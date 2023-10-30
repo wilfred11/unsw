@@ -29,7 +29,7 @@ def filter_on_attack_cat(raw_data, attack_cat="Normal"):
 
 def prepare_data_for_specific_attack_cat(raw_data, attack_cat, test):
     if test:
-        half_max = 50
+        half_max = 200
     else:
         half_max = 100000
 

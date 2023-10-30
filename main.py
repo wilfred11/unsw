@@ -1,5 +1,5 @@
 import pandas as pd
-# import seaborn as sns
+import seaborn as sns
 from functions import unsw_data, cleanup_project_dirs, data_dir, external_data_dir, test_classifiers_dir
 from read_data import read_data, info
 from inspect_data import inspect_for_empty_or_na_columns
@@ -12,6 +12,8 @@ from wakepy import keep
 test = True
 
 execute = 1
+
+sns.set_style("darkgrid")
 
 if execute == 1:
     with keep.running() as k:
