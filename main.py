@@ -1,5 +1,8 @@
 import pandas as pd
 import seaborn as sns
+from matplotlib import pyplot as plt
+
+from create_figures import create_results_plot, create_results_plot_all
 from functions import unsw_data, cleanup_project_dirs, data_dir, external_data_dir, test_classifiers_dir
 from read_data import read_data, info
 from inspect_data import inspect_for_empty_or_na_columns
@@ -11,7 +14,7 @@ from wakepy import keep
 
 test = True
 
-execute = 1
+execute = 3
 
 sns.set_style("darkgrid")
 
@@ -39,6 +42,8 @@ if execute == 1:
 
         test_classifiers(raw_data, test)
 
+
+
         # TODO find optimal features
         # TODO train model with optimal features
         # TODO check which attack_data is classified as normal
@@ -62,21 +67,4 @@ elif execute == 2:
 
 
 else:
-    test = pd.read_pickle(test_classifiers_dir() + "/" + 'clf_results_pre.pkl', compression='infer')
-    test.to_excel(test_classifiers_dir() + '/' + 'clf_results_pre.xlsx')
-    print(test)
-    test.index.names = ['attack_cat', 'clf', 'score']
-    print(test)
-    test = test.query("attack_cat == 'DoS'")
-    test = test.query("score == 'test_F1'")
-    test = test.droplevel(0, axis=0)
-    test = test.droplevel(1, axis=0)
-    test = test.T
-    # test = test.query("clf == 'svm'")
-    print(test)
-    # sns.relplot(data=test, kind="line")
-    """
-    sns.set(rc={"figure.figsize": (8, 5)})
-    sns.lineplot(data=test)
-    plt.show()
-    """
+    create_results_plot_all()
