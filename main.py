@@ -2,19 +2,19 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from create_figures import create_results_plot, create_results_plot_all
-from functions import unsw_data, cleanup_project_dirs, data_dir
+from create_figures import create_results_plot, create_results_plot_all, correlated_features
+from functions import unsw_data, cleanup_project_dirs, data_dir, keep_numeric_columns
 from read_data import read_data, info
 from inspect_data import inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize
-from project import test_classifiers, reduce_features
+from project import test_classifiers, reduce_features, lasso
 from wakepy import keep
 
 # LOKY_MAX_CPU_COUNT = str(len(psutil.Process().cpu_affinity()))
 
 test = True
 
-execute = 1
+execute = 2
 
 sns.set_style("darkgrid")
 
@@ -40,9 +40,8 @@ if execute == 1:
         print('data shape', raw_data.shape)
         raw_data.to_csv(data_dir() + '/' + 'raw_data_prepared.csv')
 
-        #test_classifiers(raw_data, test)
-        test_classifiers(raw_data, test, ['dt', 'svm'])
-
+        # test_classifiers(raw_data, test)
+        test_classifiers(raw_data, test, ['dt', 'svm'], 1000)
 
         # TODO find optimal features
         # TODO train model with optimal features
@@ -60,10 +59,14 @@ if execute == 1:
 
 elif execute == 2:
     with keep.running() as k:
-        raw_data = pd.read_csv(data_dir() + "/" + 'raw_data_prepared.csv')
-        #reduce_features(raw_data, test, 'Normal')
-        #https://medium.com/analytics-vidhya/feature-selection-using-scikit-learn-5b4362e0c19b
-        #https: // thepythoncode.com / article / dimensionality - reduction - using - feature - extraction - sklearn
+        raw_data = pd.read_csv(data_dir() + "/" + 'raw_data_prepared.csv', index_col=0)
+        raw_data = keep_numeric_columns(raw_data)
+        correlated_features(raw_data)
+        # reduce_features(raw_data, 'Normal')
+
+        # lasso(raw_data, 'Normal')
+        # https://medium.com/analytics-vidhya/feature-selection-using-scikit-learn-5b4362e0c19b
+        # https: // thepythoncode.com / article / dimensionality - reduction - using - feature - extraction - sklearn
 
 
 else:

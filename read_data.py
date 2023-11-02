@@ -31,7 +31,7 @@ def info(raw_data):
     print("\n")
     print(str(sys.getsizeof(raw_data) / 1024) + " kb")
     print("\n")
-    raw_data.info(verbose=0)
+    raw_data.info(verbose=1)
     print("\n")
     rd_attacks = raw_data[raw_data['attack_cat'] != 'Normal']
     raw_data.attack_cat.value_counts(normalize=False).to_csv(read_prepare_dir() + '/' + 'attack_cat_counts.csv')

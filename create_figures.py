@@ -31,3 +31,17 @@ def create_results_plot(results, attack_cat):
         'Resultaten Normal<>' + (attack_cat if attack_cat != 'Normal' else 'alle aanvallen'))
     plt.legend(title='')
     plt.savefig(figures_dir() + '/' + attack_cat + '_results.png')
+
+
+def correlated_features(raw_data):
+    corr_mat = raw_data.corr(method='pearson')
+    plt.figure(figsize=(25, 25))
+    sns.heatmap(corr_mat, square=True, annot=True, annot_kws={'size': 8})
+    plt.savefig(figures_dir() + '/heatmap_features.png')
+
+    columns = corr_mat.columns
+    for i in range(corr_mat.shape[0]):
+        for j in range(i + 1, corr_mat.shape[0]):
+            if corr_mat.iloc[i, j] >= 0.9:
+                print(f"{columns[i]:20s} {columns[j]:20s} {corr_mat.iloc[i, j]}")
+    #plt.show()

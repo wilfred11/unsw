@@ -27,14 +27,9 @@ def filter_on_attack_cat(raw_data, attack_cat="Normal"):
     return result
 
 
-def prepare_data_for_specific_attack_cat(raw_data, attack_cat, test):
-    if test:
-        half_max = 50
-    else:
-        half_max = 100000
-
+def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size):
     raw_data_tmp = raw_data.copy()
-    if attack_cat!='Normal':
+    if attack_cat != 'Normal':
         raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'attack_cat'] = "Normal"
 
     number_of_attack_cat = len(raw_data_tmp[raw_data_tmp['attack_cat'] == attack_cat])
@@ -47,12 +42,12 @@ def prepare_data_for_specific_attack_cat(raw_data, attack_cat, test):
 
     X_normal = raw_data_tmp[raw_data_tmp.attack_cat == "Normal"]
 
-    X_normal_max = resample(X_normal, replace=False, n_samples=half_max, random_state=0)
+    X_normal_max = resample(X_normal, replace=False, n_samples=int(size / 2), random_state=0)
 
-    if number_of_attack_cat < half_max:
-        X_attack_max = resample(X_attack, replace=True, n_samples=half_max, random_state=0)
+    if number_of_attack_cat < size / 2:
+        X_attack_max = resample(X_attack, replace=True, n_samples=int(size / 2), random_state=0)
     else:
-        X_attack_max = resample(X_attack, replace=False, n_samples=half_max, random_state=0)
+        X_attack_max = resample(X_attack, replace=False, n_samples=int(size / 2), random_state=0)
 
     X_complete = pd.concat([X_attack_max, X_normal_max])
     raw_data_tmp = None

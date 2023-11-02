@@ -1,16 +1,15 @@
 import pandas as pd
-#from probatus.feature_elimination import ShapRFECV
+# from probatus.feature_elimination import ShapRFECV
 from sklearn.model_selection import cross_validate, StratifiedKFold, KFold
 from sklearn.model_selection import GridSearchCV
-#from probatus.feature_elimination import ShapRFECV
+# from probatus.feature_elimination import ShapRFECV
 from sklearn.feature_selection import RFECV
 from sklearn.feature_selection import SelectKBest, chi2
 
 
-
 def classify(classifier, X, y):
     scoring = ['accuracy', 'precision', 'recall']
-    cv = StratifiedKFold(n_splits=5,  shuffle=False)
+    cv = StratifiedKFold(n_splits=5, shuffle=False)
     # scores = cross_val_score(classifier, X, y, scoring='accuracy', cv=cv, n_jobs=-1)
     scores = cross_validate(estimator=classifier, X=X, y=y, cv=cv, scoring=scoring, n_jobs=-1)
     scores = pd.DataFrame(scores)
@@ -19,7 +18,7 @@ def classify(classifier, X, y):
 
 
 def grid_search(classifier, param_grid, X, y):
-    optimal_params = GridSearchCV(classifier, param_grid, cv=5, scoring='f1_micro' , verbose=0, n_jobs=-1)
+    optimal_params = GridSearchCV(classifier, param_grid, cv=5, scoring='f1_micro', verbose=0, n_jobs=-1)
     optimal_params.fit(X, y)
     opt = pd.DataFrame(optimal_params.best_params_.items())
     opt.columns = ['param', 'value']
@@ -40,11 +39,12 @@ def reduce_features_shap(X, y, clf, params):
     #print('Best features :', X.columns[rfecv.support_])
     """
 
-def reduce_features_rfecv(classifier, X, y, kind, attack_cat):
-    print('reducing features ' + kind + ' ' + attack_cat)
-    classifier=classifier.fit(X, y)
-    cv = KFold(n_splits=10, shuffle=False)
+
+def reduce_features_rfecv(classifier, X, y):
+    # print('reducing features ' + kind + ' ' + attack_cat)
+    #classifier.fit(X, y)
+    cv = StratifiedKFold(n_splits=10, shuffle=False)
     rfecv = RFECV(estimator=classifier, step=1, cv=cv, scoring='accuracy', min_features_to_select=20, n_jobs=-1)
     rfecv = rfecv.fit(X, y)
-    print('Optimal number of features :', rfecv.n_features_)
+    #print('Optimal number of features :', rfecv.n_features_)
     print('Best features :', X.columns[rfecv.support_])

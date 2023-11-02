@@ -30,11 +30,25 @@ def features_to_be_denominalized():
 
 
 def non_numeric_features_to_keep():
-    return ['is_ftp_login', 'is_sm_ips_ports', 'attack_cat', 'label']
+    return ['is_ftp_login', 'is_sm_ips_ports', 'attack_cat', 'Label']
 
 
 def irrelevant_features():
     return ['Ltime', 'Stime', 'srcip', 'sport', 'dstip', 'dsport']
+
+
+def denominalized_and_boolean_features(raw_data):
+    l = raw_data.columns[raw_data.columns.str.startswith('service')].to_list() + raw_data.columns[
+        raw_data.columns.str.startswith('proto')].to_list() + raw_data.columns[
+            raw_data.columns.str.startswith('state')].to_list() + non_numeric_features_to_keep()
+    return l
+
+
+def keep_numeric_columns(raw_data):
+    l = denominalized_and_boolean_features(raw_data)
+    cols = [col for col in raw_data.columns if col not in l]
+    raw_data_numeric = raw_data[cols]
+    return raw_data_numeric
 
 
 def cleanup_project_dirs():

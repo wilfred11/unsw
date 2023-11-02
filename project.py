@@ -1,17 +1,19 @@
 import numpy
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import Lasso
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 from sklearn.tree import DecisionTreeClassifier
 
 from functions import data_dir, test_classifiers_dir
-from model_functions import classify, grid_search, reduce_features_shap
+from model_functions import classify, grid_search, reduce_features_rfecv
 from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns
 
 
-def test_classifiers(raw_data, test, kinds):
+def test_classifiers(raw_data, test, kinds, size):
     cats = list(raw_data.attack_cat.unique().to_numpy())
     scores_pre = pd.DataFrame()
     scores_post = pd.DataFrame()
@@ -22,7 +24,7 @@ def test_classifiers(raw_data, test, kinds):
     print(optimal_params)
     for attack_cat in cats:
         print('**************************')
-        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, test)
+        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, size)
         X, y = remove_target_columns(attack_cat_data)
         for kind in kinds:
             clf = get_classifier(kind)
@@ -87,7 +89,11 @@ def get_classifier(kind, params=None):
             else:
                 return DecisionTreeClassifier(criterion=params['criterion'],
                                               max_depth=params['max_depth'])
-
+        case 'lasso':
+            if params is None:
+                return Lasso()
+            else:
+                return Lasso(params)
         case _:
             return
 
@@ -105,14 +111,71 @@ def get_params(kind):
         case 'knn':
             k_range = list(range(1, 31))
             return dict(n_neighbors=k_range)
+        case 'lasso':
+            return {'alpha': (np.logspace(-8, 8, 100))}
         case _:
             return
 
 
-def reduce_features(raw_data, test, attack_cat):
-    attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, test)
+def reduce_features(raw_data, attack_cat):
+    attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 1000)
     X, y = remove_target_columns(attack_cat_data)
-    clf = get_classifier('dt')
-    params = get_params('dt')
-    reduce_features_shap(X, y, clf, params)
+    # clf = get_classifier('dt')
+    # params = get_params('dt')
+    # reduce_features_shap(X, y, clf, params)
+    # clf = get_classifier('svm')
+    lr_params = read_params('dt')
+    lr_params.index.name = 'attack_cat'
+    # print(svm_params)
+    params = lr_params.query("attack_cat =='" + attack_cat + "'")
+    print(params.to_dict('records'))
+    classifier = get_classifier('dt', params.to_dict('records')[0])
+    # print(params)
+    reduce_features_rfecv(classifier, X, y)
 
+
+def condition(x):
+    return x > 0.0000001 or x < -0.0000001
+
+
+def lasso(raw_data, attack_cat):
+    """
+    https://www.datacamp.com/tutorial/tutorial-lasso-ridge-regression?utm_source=google&utm_medium=paid_search&utm_campaignid=19589720818&utm_adgroupid=157156373751&utm_device=c&utm_keyword=&utm_matchtype=&utm_network=g&utm_adpostion=&utm_creative=676354848902&utm_targetid=dsa-2218886984100&utm_loc_interest_ms=&utm_loc_physical_ms=1001071&utm_content=&utm_campaign=230119_1-sea~dsa~tofu_2-b2c_3-eu_4-prc_5-na_6-na_7-le_8-pdsh-go_9-na_10-na_11-na-oct23&gclid=CjwKCAjw7oeqBhBwEiwALyHLM6I2VIxuXzBANx3jIYuJcKTrj0bCip6PCFS0GDmdnnftoJCZyGrINBoC13MQAvD_BwE
+    https://www.shedloadofcode.com/blog/eight-ways-to-perform-feature-selection-with-scikit-learn
+    """
+    # Load the Boston Housing dataset
+    attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 10000)
+    X, y = remove_target_columns(attack_cat_data)
+    print(len(X.columns))
+    # Perform L1 regularisation (Lasso)
+    lasso = Lasso(alpha=0.00001, max_iter=5000)
+    lasso.fit(X, y)
+
+    # Get the non-zero feature coefficients
+    nonzero_coefs = lasso.coef_
+    print(nonzero_coefs)
+    print(len(nonzero_coefs))
+    selected_indices = nonzero_coefs != 0
+    selected_indices = [idx for idx, element in enumerate(nonzero_coefs) if condition(element)]
+    print(selected_indices)
+    #selected_indices = find(nonzero_coefs > 0.0000001 or nonzero_coefs < -0.0000001)
+    # selected_indices = (nonzero_coefs > 0.000001
+    # selected                    nonzero_coefs < -0.000001)
+    selected_features = X.columns[selected_indices]
+    nonzero_coefs = nonzero_coefs[selected_indices]
+
+    # Plot the feature coefficients
+    plt.figure(figsize=(10, 100))
+    plt.barh(range(len(nonzero_coefs)), nonzero_coefs, tick_label=selected_features)
+    plt.xlabel('Coefficient Values')
+    plt.ylabel('Features')
+    plt.title('L1 Regularisation (Lasso): Feature Coefficients')
+    plt.show()
+
+    print("Selected Features:")
+    print(selected_features)
+
+
+def read_params(kind):
+    results = pd.read_pickle(test_classifiers_dir() + "/" + kind + '_params.pkl', compression='infer')
+    return results
