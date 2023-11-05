@@ -3,7 +3,7 @@ from sklearn.preprocessing import StandardScaler
 from functions import numeric_features
 from functions import non_numeric_features
 from sklearn.utils import resample
-
+import category_encoders as ce
 
 def standardize(raw_data):
     print('standardizing data')
@@ -29,11 +29,19 @@ def filter_on_attack_cat(raw_data, attack_cat="Normal"):
 
 def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size):
     raw_data_tmp = raw_data.copy()
+    number_of_attack_cat = 0
+    number_of_normal =0
     if attack_cat != 'Normal':
+        raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'Label'] = 0
         raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'attack_cat'] = "Normal"
 
-    number_of_attack_cat = len(raw_data_tmp[raw_data_tmp['attack_cat'] == attack_cat])
-    number_of_normal = len(raw_data_tmp[raw_data_tmp['attack_cat'] == "Normal"])
+        number_of_attack_cat = len(raw_data_tmp[raw_data_tmp['attack_cat'] == attack_cat])
+        number_of_normal = len(raw_data_tmp[raw_data_tmp['attack_cat'] == "Normal"])
+    if attack_cat == 'Normal':
+        #raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'attack_cat'] = "Normal"
+        number_of_attack_cat = len(raw_data_tmp[raw_data_tmp['attack_cat'] != 'Normal'])
+        number_of_normal = len(raw_data_tmp[raw_data_tmp['attack_cat'] == "Normal"])
+
 
     if attack_cat != 'Normal':
         X_attack = raw_data_tmp[raw_data_tmp.attack_cat == attack_cat]

@@ -29,23 +29,26 @@ def features_to_be_denominalized():
     return ['proto', 'service', 'state']
 
 
-def non_numeric_features_to_keep():
-    return ['is_ftp_login', 'is_sm_ips_ports', 'attack_cat', 'Label']
+def non_numeric_features_to_keep(include_targets=True):
+    if include_targets == True:
+        return ['is_ftp_login', 'is_sm_ips_ports', 'attack_cat', 'Label']
+    else:
+        return ['is_ftp_login', 'is_sm_ips_ports']
 
 
 def irrelevant_features():
     return ['Ltime', 'Stime', 'srcip', 'sport', 'dstip', 'dsport']
 
 
-def denominalized_and_boolean_features(raw_data):
+def denominalized_and_boolean_features(raw_data, include_targets=False):
     l = raw_data.columns[raw_data.columns.str.startswith('service')].to_list() + raw_data.columns[
         raw_data.columns.str.startswith('proto')].to_list() + raw_data.columns[
-            raw_data.columns.str.startswith('state')].to_list() + non_numeric_features_to_keep()
+            raw_data.columns.str.startswith('state')].to_list() + non_numeric_features_to_keep(include_targets)
     return l
 
 
-def keep_numeric_columns(raw_data):
-    l = denominalized_and_boolean_features(raw_data)
+def keep_numeric_columns(raw_data, exclude_targets=True):
+    l = denominalized_and_boolean_features(raw_data, exclude_targets)
     cols = [col for col in raw_data.columns if col not in l]
     raw_data_numeric = raw_data[cols]
     return raw_data_numeric
@@ -61,6 +64,7 @@ def cleanup_project_dirs():
     os.makedirs(data_dir(), exist_ok=True)
     os.makedirs(test_classifiers_dir(), exist_ok=True)
     os.makedirs(read_prepare_dir(), exist_ok=True)
+    os.makedirs(feature_reduction_dir(), exist_ok=True)
 
 
 def external_data_dir():
@@ -81,6 +85,10 @@ def test_classifiers_dir():
 
 def read_prepare_dir():
     return data_dir() + '/read_prepare'
+
+
+def feature_reduction_dir():
+    return data_dir() + '/feature_reduction'
 
 
 def create_path(path):

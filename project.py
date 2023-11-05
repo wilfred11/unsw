@@ -2,16 +2,21 @@ import numpy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import category_encoders as ce
+import seaborn as sns
 from sklearn.linear_model import Lasso
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.feature_selection import SelectKBest, SelectPercentile, mutual_info_classif
 
-from functions import data_dir, test_classifiers_dir
+from functions import data_dir, test_classifiers_dir, feature_reduction_dir, features_to_be_denominalized
 from model_functions import classify, grid_search, reduce_features_rfecv
 from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns
 
+
+# https://www.rasgoml.com/feature-engineering-tutorials/feature-selection-using-mutual-information-in-scikit-learn
 
 def test_classifiers(raw_data, test, kinds, size):
     cats = list(raw_data.attack_cat.unique().to_numpy())
@@ -117,6 +122,32 @@ def get_params(kind):
             return
 
 
+def create_column_name(row):
+    if len(row['feat_agg']) == 1:
+        return row['feat_agg'][0]
+    elif len(row['feat_agg']) == 2:
+        return row['feat_agg'][0] + '--' + row['feat_agg'][1]
+    elif len(row['feat_agg']) > 2:
+        return row['feat_agg'][0] + '--' + row['feat_agg'][1] + '...'
+
+
+def handle_categorical_data(raw_data):
+    for feature in features_to_be_denominalized():
+        ct = pd.crosstab(raw_data[feature], raw_data['attack_cat'], normalize='index').round(2)
+        ct.to_excel(feature_reduction_dir() + '/' + feature + '-attack-ct.xlsx')
+        ct = ct.multiply(10)
+        ct = ct.apply(np.ceil)
+        ct.to_excel(feature_reduction_dir() + '/' + feature + '-attack-ct-mp.xlsx')
+        l = ct.columns.to_list()
+        ct = ct.reset_index()
+        result = ct.groupby(l, as_index=False).agg({feature: lambda x: list(x)})
+        df = pd.DataFrame()
+        df = pd.DataFrame({'feat': result[feature], 'feat_agg': result[feature]})
+        df = df.explode('feat')
+        df['column_name'] = df.apply(lambda x: create_column_name(x), axis=1)
+        df.to_excel(feature_reduction_dir() + '/' + feature + '-attack-aggregated.xlsx')
+
+
 def reduce_features(raw_data, attack_cat):
     attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 1000)
     X, y = remove_target_columns(attack_cat_data)
@@ -143,8 +174,16 @@ def lasso(raw_data, attack_cat):
     https://www.datacamp.com/tutorial/tutorial-lasso-ridge-regression?utm_source=google&utm_medium=paid_search&utm_campaignid=19589720818&utm_adgroupid=157156373751&utm_device=c&utm_keyword=&utm_matchtype=&utm_network=g&utm_adpostion=&utm_creative=676354848902&utm_targetid=dsa-2218886984100&utm_loc_interest_ms=&utm_loc_physical_ms=1001071&utm_content=&utm_campaign=230119_1-sea~dsa~tofu_2-b2c_3-eu_4-prc_5-na_6-na_7-le_8-pdsh-go_9-na_10-na_11-na-oct23&gclid=CjwKCAjw7oeqBhBwEiwALyHLM6I2VIxuXzBANx3jIYuJcKTrj0bCip6PCFS0GDmdnnftoJCZyGrINBoC13MQAvD_BwE
     https://www.shedloadofcode.com/blog/eight-ways-to-perform-feature-selection-with-scikit-learn
     """
+
     # Load the Boston Housing dataset
     attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 10000)
+
+    sns.pairplot(attack_cat_data)
+    plt.show()
+
+    # we will log the LSTAT Column
+    # boston_df.LSTAT = np.log(boston_df.LSTAT)
+
     X, y = remove_target_columns(attack_cat_data)
     print(len(X.columns))
     # Perform L1 regularisation (Lasso)
@@ -158,7 +197,7 @@ def lasso(raw_data, attack_cat):
     selected_indices = nonzero_coefs != 0
     selected_indices = [idx for idx, element in enumerate(nonzero_coefs) if condition(element)]
     print(selected_indices)
-    #selected_indices = find(nonzero_coefs > 0.0000001 or nonzero_coefs < -0.0000001)
+    # selected_indices = find(nonzero_coefs > 0.0000001 or nonzero_coefs < -0.0000001)
     # selected_indices = (nonzero_coefs > 0.000001
     # selected                    nonzero_coefs < -0.000001)
     selected_features = X.columns[selected_indices]

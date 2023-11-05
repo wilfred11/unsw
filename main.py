@@ -1,18 +1,20 @@
 import pandas as pd
+import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from create_figures import create_results_plot, create_results_plot_all, correlated_features
-from functions import unsw_data, cleanup_project_dirs, data_dir, keep_numeric_columns
+from create_figures import create_results_plot, create_results_plot_all, correlated_features, pairplot
+from functions import unsw_data, cleanup_project_dirs, data_dir, keep_numeric_columns, feature_reduction_dir
 from read_data import read_data, info
 from inspect_data import inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize
-from project import test_classifiers, reduce_features, lasso
+from project import test_classifiers, reduce_features, lasso, handle_categorical_data
+# from feature_engine.selection import DropConstantFeatures
 from wakepy import keep
 
 # LOKY_MAX_CPU_COUNT = str(len(psutil.Process().cpu_affinity()))
 
-test = True
+test = False
 
 execute = 2
 
@@ -59,12 +61,24 @@ if execute == 1:
 
 elif execute == 2:
     with keep.running() as k:
-        raw_data = pd.read_csv(data_dir() + "/" + 'raw_data_prepared.csv', index_col=0)
-        raw_data = keep_numeric_columns(raw_data)
-        correlated_features(raw_data)
-        # reduce_features(raw_data, 'Normal')
+        cleanup_project_dirs()
 
-        # lasso(raw_data, 'Normal')
+        raw_data = pd.DataFrame()
+
+        raw_data = read_data(unsw_data, test)
+        handle_categorical_data(raw_data)
+
+        """
+        raw_data = pd.read_csv(data_dir() + "/" + 'raw_data_prepared.csv', index_col=0)
+        raw_data_nobools = keep_numeric_columns(raw_data, exclude_targets=False)
+        print(raw_data_nobools.shape)
+        print(raw_data_nobools.head())
+        #correlated_features(raw_data_nobools)
+
+        #lasso(raw_data, 'Normal')
+        pairplot(raw_data_nobools, 'Normal')
+        """
+        # reduce_features(raw_data, 'Normal')
         # https://medium.com/analytics-vidhya/feature-selection-using-scikit-learn-5b4362e0c19b
         # https: // thepythoncode.com / article / dimensionality - reduction - using - feature - extraction - sklearn
 
