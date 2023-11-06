@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import category_encoders as ce
 import seaborn as sns
+import mpu
 from sklearn.linear_model import Lasso
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
@@ -19,7 +20,7 @@ from prepare_data import prepare_data_for_specific_attack_cat, remove_target_col
 # https://www.rasgoml.com/feature-engineering-tutorials/feature-selection-using-mutual-information-in-scikit-learn
 
 def test_classifiers(raw_data, test, kinds, size):
-    cats = list(raw_data.attack_cat.unique().to_numpy())
+    cats = list(raw_data.attack_cat.unique())
     scores_pre = pd.DataFrame()
     scores_post = pd.DataFrame()
     optimal_params = {}
@@ -146,6 +147,15 @@ def handle_categorical_data(raw_data):
         df = df.explode('feat')
         df['column_name'] = df.apply(lambda x: create_column_name(x), axis=1)
         df.to_excel(feature_reduction_dir() + '/' + feature + '-attack-aggregated.xlsx')
+        feat_dict = dict(zip(df.feat, df.column_name))
+        mpu.io.write(feature_reduction_dir() + '/' + feature + '_cat_dict.pickle', feat_dict)
+
+
+def reduce_categories(raw_data):
+    for feature in features_to_be_denominalized():
+        feat_dict = mpu.io.read(feature_reduction_dir() + '/' + feature + '_cat_dict.pickle')
+        raw_data = raw_data.replace({feature: feat_dict})
+    return raw_data
 
 
 def reduce_features(raw_data, attack_cat):
@@ -178,8 +188,8 @@ def lasso(raw_data, attack_cat):
     # Load the Boston Housing dataset
     attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 10000)
 
-    sns.pairplot(attack_cat_data)
-    plt.show()
+    #sns.pairplot(attack_cat_data)
+    #plt.show()
 
     # we will log the LSTAT Column
     # boston_df.LSTAT = np.log(boston_df.LSTAT)
@@ -187,7 +197,7 @@ def lasso(raw_data, attack_cat):
     X, y = remove_target_columns(attack_cat_data)
     print(len(X.columns))
     # Perform L1 regularisation (Lasso)
-    lasso = Lasso(alpha=0.00001, max_iter=5000)
+    lasso = Lasso(alpha=0.0001, max_iter=5000)
     lasso.fit(X, y)
 
     # Get the non-zero feature coefficients
@@ -204,13 +214,13 @@ def lasso(raw_data, attack_cat):
     nonzero_coefs = nonzero_coefs[selected_indices]
 
     # Plot the feature coefficients
-    plt.figure(figsize=(10, 100))
+    plt.figure(figsize=(70, 100))
     plt.barh(range(len(nonzero_coefs)), nonzero_coefs, tick_label=selected_features)
     plt.xlabel('Coefficient Values')
     plt.ylabel('Features')
     plt.title('L1 Regularisation (Lasso): Feature Coefficients')
-    plt.show()
-
+    #plt.show()
+    plt.savefig(feature_reduction_dir() + '/figs/feature-coef.png')
     print("Selected Features:")
     print(selected_features)
 

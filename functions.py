@@ -65,6 +65,7 @@ def cleanup_project_dirs():
     os.makedirs(test_classifiers_dir(), exist_ok=True)
     os.makedirs(read_prepare_dir(), exist_ok=True)
     os.makedirs(feature_reduction_dir(), exist_ok=True)
+    os.makedirs(feature_reduction_dir()+'/figs', exist_ok=True)
 
 
 def external_data_dir():
