@@ -19,7 +19,7 @@ if execute == 2:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=None)
 
         # test_classifiers(raw_data, test)
-        test_classifiers(raw_data, test, ['dt', 'svm'], 1000)
+        test_classifiers(raw_data, test, ['dt', 'svm'], 60000)
 
         # TODO find optimal features
         # TODO train model with optimal features

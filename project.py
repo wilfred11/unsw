@@ -187,7 +187,7 @@ def reduce_features_lasso(raw_data):
     features_to_be_removed = pd.DataFrame({'attack_cat': [], 'features_to_be_removed': []})
     common_unselected_features = raw_data.columns.to_list()
     for attack_cat in cats:
-        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 100000)
+        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 500000)
         X, y = remove_target_columns(attack_cat_data)
 
         lasso = Lasso(alpha=0.0001, max_iter=5000)
@@ -201,7 +201,7 @@ def reduce_features_lasso(raw_data):
         selected_indices = [idx for idx, element in enumerate(nonzero_coefs) if condition(element)]
         unselected_indices = [idx for idx, element in enumerate(nonzero_coefs) if not condition(element)]
         print(selected_indices)
-        #print(unselected_indices)
+        # print(unselected_indices)
         selected_features = X.columns[selected_indices]
         unselected_features = X.columns[unselected_indices]
 
@@ -210,7 +210,7 @@ def reduce_features_lasso(raw_data):
                    'features_to_be_removed': unselected_features.to_list()
                    }
 
-        features_to_be_removed =pd.concat([features_to_be_removed, pd.DataFrame([new_row])], ignore_index=True)
+        features_to_be_removed = pd.concat([features_to_be_removed, pd.DataFrame([new_row])], ignore_index=True)
 
         nonzero_coefs = nonzero_coefs[selected_indices]
 
@@ -226,9 +226,9 @@ def reduce_features_lasso(raw_data):
         print(selected_features)
     print(features_to_be_removed)
     print(common_unselected_features)
-    features_to_be_removed.to_csv(external_data_dir() + '/' + 'features_to_be_removed_lasso.csv', index=False)
-    common_unselected_features.to_csv(external_data_dir() + '/' + 'common_unselected_features_lasso.csv', index=False)
-
+    features_to_be_removed.to_csv(feature_reduction_dir() + '/'+'features_to_be_removed_lasso.csv', index=False)
+    cuf = pd.DataFrame(common_unselected_features, columns=['unselected features'])
+    cuf.to_csv(feature_reduction_dir() + '/'+ 'common_unselected_features.csv', index=False)
 
 
 def read_params(kind):
