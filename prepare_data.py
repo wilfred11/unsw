@@ -7,10 +7,16 @@ from sklearn.utils import resample
 def standardize(raw_data):
     print('standardizing data')
     scaler = StandardScaler()
-    raw_data_numeric_std = pd.DataFrame(data=scaler.fit_transform(raw_data[numeric_features(raw_data)]),
-                                        columns=numeric_features(raw_data))
-    raw_data_std = pd.merge(raw_data_numeric_std, raw_data[non_numeric_features()], left_index=True, right_index=True)
-    return raw_data_std
+    raw_data_numeric_std = pd.DataFrame(data=scaler.fit_transform(raw_data[numeric_features(raw_data)]),columns=numeric_features(raw_data))
+
+    print(raw_data_numeric_std.head())
+    raw_data_numeric_std.reset_index(inplace=True)
+    print(raw_data.head())
+    raw_data.reset_index( inplace=True)
+    #raw_data_std = pd.merge(raw_data_numeric_std, raw_data[non_numeric_features()], left_index=True, right_index=True)
+    cls = non_numeric_features()
+    raw_data = pd.concat( [raw_data[cls],raw_data_numeric_std], axis=1)
+    return raw_data
 
 
 def denominalize(raw_data):

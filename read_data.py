@@ -61,10 +61,14 @@ def read_data(unsw_data, test):
         raw_data_list.append(raw_data_part)
 
     raw_data = pd.concat(raw_data_list)
+    print(raw_data.shape)
+    print(raw_data.head())
     if test:
         raw_data = raw_data.sample(frac=0.75)
 
     add_column_names(raw_data)
     clean_data(raw_data)
+    print(raw_data.shape)
+    print(raw_data.head())
     print("data read, column names added, data cleaned")
     return raw_data

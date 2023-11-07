@@ -9,7 +9,7 @@ from sklearn import svm
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_selection import SelectKBest, SelectPercentile, mutual_info_classif
 
-from functions import test_classifiers_dir, feature_reduction_dir, features_to_be_denominalized
+from functions import test_classifiers_dir, feature_reduction_dir, features_to_be_denominalized, external_data_dir
 from model_functions import classify, grid_search, reduce_features_rfecv
 from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns
 
@@ -176,16 +176,20 @@ def condition(x):
     return x > 0.0000001 or x < -0.0000001
 
 
-def reduce_features_lasso(raw_data, attack_cat):
+def reduce_features_lasso(raw_data):
+    print(raw_data.shape)
     """
     https://www.datacamp.com/tutorial/tutorial-lasso-ridge-regression?utm_source=google&utm_medium=paid_search&utm_campaignid=19589720818&utm_adgroupid=157156373751&utm_device=c&utm_keyword=&utm_matchtype=&utm_network=g&utm_adpostion=&utm_creative=676354848902&utm_targetid=dsa-2218886984100&utm_loc_interest_ms=&utm_loc_physical_ms=1001071&utm_content=&utm_campaign=230119_1-sea~dsa~tofu_2-b2c_3-eu_4-prc_5-na_6-na_7-le_8-pdsh-go_9-na_10-na_11-na-oct23&gclid=CjwKCAjw7oeqBhBwEiwALyHLM6I2VIxuXzBANx3jIYuJcKTrj0bCip6PCFS0GDmdnnftoJCZyGrINBoC13MQAvD_BwE
     https://www.shedloadofcode.com/blog/eight-ways-to-perform-feature-selection-with-scikit-learn
     """
-    cats = list(raw_data.attack_cat.unique())
 
+    cats = list(raw_data.attack_cat.unique())
+    features_to_be_removed = pd.DataFrame({'attack_cat': [], 'features_to_be_removed': []})
+    common_unselected_features = raw_data.columns.to_list()
     for attack_cat in cats:
-        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 1000)
+        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 100000)
         X, y = remove_target_columns(attack_cat_data)
+
         lasso = Lasso(alpha=0.0001, max_iter=5000)
         lasso.fit(X, y)
 
@@ -193,10 +197,21 @@ def reduce_features_lasso(raw_data, attack_cat):
         nonzero_coefs = lasso.coef_
         print(nonzero_coefs)
         print(len(nonzero_coefs))
-        #selected_indices = nonzero_coefs != 0
+        # selected_indices = nonzero_coefs != 0
         selected_indices = [idx for idx, element in enumerate(nonzero_coefs) if condition(element)]
+        unselected_indices = [idx for idx, element in enumerate(nonzero_coefs) if not condition(element)]
         print(selected_indices)
+        #print(unselected_indices)
         selected_features = X.columns[selected_indices]
+        unselected_features = X.columns[unselected_indices]
+
+        common_unselected_features = list(set(unselected_features).intersection(common_unselected_features))
+        new_row = {'attack_cat': attack_cat,
+                   'features_to_be_removed': unselected_features.to_list()
+                   }
+
+        features_to_be_removed =pd.concat([features_to_be_removed, pd.DataFrame([new_row])], ignore_index=True)
+
         nonzero_coefs = nonzero_coefs[selected_indices]
 
         # Plot the feature coefficients
@@ -205,10 +220,15 @@ def reduce_features_lasso(raw_data, attack_cat):
         plt.xlabel('Coefficient Values')
         plt.ylabel('Features')
         plt.title('L1 Regularisation (Lasso): Feature Coefficients')
-        #plt.show()
+        # plt.show()
         plt.savefig(feature_reduction_dir() + '/figs/feature-coef.png')
         print("Selected Features:")
         print(selected_features)
+    print(features_to_be_removed)
+    print(common_unselected_features)
+    features_to_be_removed.to_csv(external_data_dir() + '/' + 'features_to_be_removed_lasso.csv', index=False)
+    common_unselected_features.to_csv(external_data_dir() + '/' + 'common_unselected_features_lasso.csv', index=False)
+
 
 
 def read_params(kind):

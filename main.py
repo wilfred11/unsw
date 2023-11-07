@@ -16,7 +16,7 @@ sns.set_style("darkgrid")
 
 if execute == 2:
     with keep.running() as k:
-        raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv')
+        raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=None)
 
         # test_classifiers(raw_data, test)
         test_classifiers(raw_data, test, ['dt', 'svm'], 1000)
@@ -50,8 +50,13 @@ elif execute == 1:
 
         handle_categorical_data(raw_data)
         raw_data = reduce_categories(raw_data)
+        print(raw_data.shape)
+        print(raw_data.head())
         # TODO handle outliers
         raw_data = standardize(raw_data)
+
+        print(raw_data.shape)
+        print(raw_data.head())
 
         proto = raw_data.proto.copy()
         service = raw_data.service.copy()
@@ -73,6 +78,8 @@ elif execute == 1:
         raw_data['is_sm_ips_ports'] = is_sm_ips_ports
 
         raw_data = denominalize(raw_data)
+        print(raw_data.shape)
+        print(raw_data.head())
 
         attack_cat = raw_data.attack_cat.copy()
         Label = raw_data.Label.copy()
@@ -84,15 +91,18 @@ elif execute == 1:
         raw_data['attack_cat'] = attack_cat
         raw_data['Label'] = Label
 
-        raw_data.to_csv(external_data_dir() + '/' + 'raw_data_prepared.csv')
+        raw_data.to_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index=False)
         # reduce_features(raw_data, 'Normal')
         # https://medium.com/analytics-vidhya/feature-selection-using-scikit-learn-5b4362e0c19b
         # https: // thepythoncode.com / article / dimensionality - reduction - using - feature - extraction - sklearn
 
 elif execute == 3:
     with keep.running() as k:
-        raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv')
-        reduce_features_lasso(raw_data, 'Normal')
+        raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=0 )
+        print(raw_data.shape)
+        print(raw_data.head())
+        #raw_data.head().to_csv(external_data_dir() + '/' + 'raw_data_prepared1.csv', index=False)
+        reduce_features_lasso(raw_data)
 
 else:
     create_results_plot_all()

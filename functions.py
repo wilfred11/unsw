@@ -11,7 +11,7 @@ def empty_string_to_nan(x):
 
 def unsw_data(test):
     if not test:
-        return ['UNSW-NB15_1.csv', 'UNSW-NB15_2.csv', 'UNSW-NB15_3.csv', 'UNSW-NB15_2.csv']
+        return ['UNSW-NB15_1.csv', 'UNSW-NB15_2.csv', 'UNSW-NB15_3.csv', 'UNSW-NB15_4.csv']
     else:
         return ['UNSW-NB15_1.csv']
 
