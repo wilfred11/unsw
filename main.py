@@ -1,23 +1,16 @@
 import pandas as pd
-import numpy as np
 import seaborn as sns
-from matplotlib import pyplot as plt
-
-from create_figures import create_results_plot, create_results_plot_all, correlated_features, pairplot
-from functions import unsw_data, cleanup_project_dirs, data_dir, keep_numeric_columns, feature_reduction_dir, \
-    external_data_dir
+from create_figures import create_results_plot_all, correlated_features, pairplot
+from functions import unsw_data, cleanup_project_dirs, external_data_dir
 from read_data import read_data, info
 from inspect_data import inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize
-from project import test_classifiers, reduce_features, lasso, handle_categorical_data, reduce_categories
-# from feature_engine.selection import DropConstantFeatures
+from project import test_classifiers, handle_categorical_data, reduce_categories, reduce_features_lasso
 from wakepy import keep
-
-# LOKY_MAX_CPU_COUNT = str(len(psutil.Process().cpu_affinity()))
 
 test = False
 
-execute = 2
+execute = 3
 
 sns.set_style("darkgrid")
 
@@ -45,7 +38,8 @@ if execute == 2:
 elif execute == 1:
     with keep.running() as k:
         cleanup_project_dirs()
-
+        # TODO drop duplicate rows
+        # TODO drop constant columns
         raw_data = pd.DataFrame()
 
         raw_data = read_data(unsw_data, test)
@@ -90,13 +84,15 @@ elif execute == 1:
         raw_data['attack_cat'] = attack_cat
         raw_data['Label'] = Label
 
-        lasso(raw_data, 'Normal')
-
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_prepared.csv')
         # reduce_features(raw_data, 'Normal')
         # https://medium.com/analytics-vidhya/feature-selection-using-scikit-learn-5b4362e0c19b
         # https: // thepythoncode.com / article / dimensionality - reduction - using - feature - extraction - sklearn
 
+elif execute == 3:
+    with keep.running() as k:
+        raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv')
+        reduce_features_lasso(raw_data, 'Normal')
 
 else:
     create_results_plot_all()

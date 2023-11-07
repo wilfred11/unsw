@@ -3,7 +3,6 @@ from sklearn.preprocessing import StandardScaler
 from functions import numeric_features
 from functions import non_numeric_features
 from sklearn.utils import resample
-import category_encoders as ce
 
 def standardize(raw_data):
     print('standardizing data')

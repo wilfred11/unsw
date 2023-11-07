@@ -1,8 +1,6 @@
 import seaborn as sns
 import pandas as pd
 from matplotlib import pyplot as plt
-from matplotlib.pyplot import subplot
-
 from functions import test_classifiers_dir, figures_dir, feature_reduction_dir
 from prepare_data import prepare_data_for_specific_attack_cat
 from math import ceil
