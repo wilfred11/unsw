@@ -32,18 +32,22 @@ def filter_on_attack_cat(raw_data, attack_cat="Normal"):
     return result
 
 
-def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size):
+def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_other_attacks=True):
     raw_data_tmp = raw_data.copy()
     number_of_attack_cat = 0
     number_of_normal =0
     if attack_cat != 'Normal':
-        raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'Label'] = 0
-        raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'attack_cat'] = "Normal"
+        if exclude_other_attacks:
+            raw_data_tmp.drop(raw_data_tmp[~raw_data_tmp['attack_cat'].isin([attack_cat, 'Normal'])].index, inplace=True)
+        else:
+            raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'Label'] = 0
+            raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'attack_cat'] = "Normal"
 
         number_of_attack_cat = len(raw_data_tmp[raw_data_tmp['attack_cat'] == attack_cat])
         number_of_normal = len(raw_data_tmp[raw_data_tmp['attack_cat'] == "Normal"])
     if attack_cat == 'Normal':
         #raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'attack_cat'] = "Normal"
+        #Todo evenly spread attacks
         number_of_attack_cat = len(raw_data_tmp[raw_data_tmp['attack_cat'] != 'Normal'])
         number_of_normal = len(raw_data_tmp[raw_data_tmp['attack_cat'] == "Normal"])
 

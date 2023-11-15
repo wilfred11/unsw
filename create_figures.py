@@ -1,8 +1,12 @@
 import seaborn as sns
 import pandas as pd
+import umap.umap_ as umap
+import umap.plot as umap_plot
+
+
 from matplotlib import pyplot as plt
-from functions import test_classifiers_dir, figures_dir, feature_reduction_dir
-from prepare_data import prepare_data_for_specific_attack_cat
+from functions import test_classifiers_dir, figures_dir, feature_reduction_dir, external_data_dir
+from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns
 from math import ceil
 
 
@@ -36,16 +40,26 @@ def create_results_plot(results, attack_cat):
 
 
 def correlated_features(raw_data):
+    features_corr = pd.DataFrame({'column': [], 'other_column': [], 'correlation': []})
     corr_mat = raw_data.corr(method='pearson')
     plt.figure(figsize=(20, 20))
     sns.heatmap(corr_mat, square=True, annot=True, annot_kws={'fontsize': 6}, fmt='.2f')
     plt.savefig(feature_reduction_dir() + "/figs/feature_heatmap_hidpi.png", dpi=200)
 
     columns = corr_mat.columns
+    corr_mat.to_pickle(feature_reduction_dir() + "/feature_corrs.pkl")
     for i in range(corr_mat.shape[0]):
         for j in range(i + 1, corr_mat.shape[0]):
-            if corr_mat.iloc[i, j] >= 0.9 or corr_mat.iloc[i, j] <= -0.9:
+            if corr_mat.iloc[i, j] >= 0.95 or corr_mat.iloc[i, j] <= -0.95:
                 print(f"{columns[i]:20s} {columns[j]:20s} {corr_mat.iloc[i, j]}")
+                new_row = {'column': columns[i],
+                           'other_column': columns[j],
+                           'correlation': corr_mat.iloc[i, j]
+                           }
+
+                features_corr = pd.concat([features_corr, pd.DataFrame([new_row])], ignore_index=True)
+
+    features_corr.to_excel(external_data_dir() + '/' + 'features_corr.xlsx', index=False)
 
 
 def pairplot(raw_data, attack_cat, size):
@@ -71,3 +85,21 @@ def pairplot(raw_data, attack_cat, size):
         cols = [item for item in cols if item not in cols_to_be_shown]
         sns.pairplot(attack_cat_data[cols_to_be_shown])
         plt.savefig(feature_reduction_dir() + '/figs/columns_pairplot_' + str(i) + '.png')
+
+
+def my_umap(raw_data):
+    # attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, 'Normal', 1000)
+    stacked = raw_data[['attack_cat']].stack()
+    y=pd.DataFrame
+    y = pd.Series(stacked.factorize()[0], index=stacked.index).unstack()
+    #y = raw_data[['attack_cat']].values.flatten()
+    #y_encoded = raw_data.attack_cat.factorize()
+    X = raw_data.drop('Label', axis=1)
+    X = X.drop('attack_cat', axis=1)
+    # print(np.unique(y))
+    # print(y)
+    #y_encoded = pd.factorize(y)
+
+    print(len(y))
+    manifold = umap.UMAP().fit(X, y)
+    umap_plot.points(manifold, labels=y, theme="fire")

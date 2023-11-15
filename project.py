@@ -3,6 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import mpu
 from sklearn.linear_model import Lasso
+from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
+from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
@@ -226,9 +228,37 @@ def reduce_features_lasso(raw_data):
         print(selected_features)
     print(features_to_be_removed)
     print(common_unselected_features)
-    features_to_be_removed.to_csv(feature_reduction_dir() + '/'+'features_to_be_removed_lasso.csv', index=False)
+    features_to_be_removed.to_csv(feature_reduction_dir() + '/' + 'features_to_be_removed_lasso.csv', index=False)
     cuf = pd.DataFrame(common_unselected_features, columns=['unselected features'])
-    cuf.to_csv(feature_reduction_dir() + '/'+ 'common_unselected_features.csv', index=False)
+    cuf.to_csv(feature_reduction_dir() + '/' + 'common_unselected_features.csv', index=False)
+
+
+def train_reduce_test(raw_data, kinds, cats, size):
+    #unused
+    scores_pre = pd.DataFrame()
+    scores_post = pd.DataFrame()
+    optimal_params = {}
+    for kind in kinds:
+        optimal_params[kind] = pd.DataFrame()
+
+        for attack_cat in cats:
+            attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 1000)
+            X, y = remove_target_columns(attack_cat_data)
+            classifier = get_classifier(kind, params=None)
+            train_X, test_X, train_y, test_y = train_test_split(X, y, stratify=True, random_state=0)
+            classifier.fit(train_X, train_y)
+            classifier.predict(test_X)
+
+
+def generate_accuracy_and_heatmap(model, x, y):
+    cm = confusion_matrix(y, model.predict(x))
+    sns.heatmap(cm, annot=True, fmt="d")
+    ac = accuracy_score(y, model.predict(x))
+    f_score = f1_score(y, model.predict(x))
+    print('Accuracy is: ', ac)
+    print('F1 score is: ', f_score)
+    print("\n")
+    return 1
 
 
 def read_params(kind):
