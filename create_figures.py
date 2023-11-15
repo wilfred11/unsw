@@ -1,8 +1,8 @@
 import seaborn as sns
 import pandas as pd
+import numpy as np
 import umap.umap_ as umap
 import umap.plot as umap_plot
-
 
 from matplotlib import pyplot as plt
 from functions import test_classifiers_dir, figures_dir, feature_reduction_dir, external_data_dir
@@ -88,18 +88,29 @@ def pairplot(raw_data, attack_cat, size):
 
 
 def my_umap(raw_data):
-    # attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, 'Normal', 1000)
-    stacked = raw_data[['attack_cat']].stack()
-    y=pd.DataFrame
-    y = pd.Series(stacked.factorize()[0], index=stacked.index).unstack()
-    #y = raw_data[['attack_cat']].values.flatten()
-    #y_encoded = raw_data.attack_cat.factorize()
-    X = raw_data.drop('Label', axis=1)
-    X = X.drop('attack_cat', axis=1)
-    # print(np.unique(y))
-    # print(y)
-    #y_encoded = pd.factorize(y)
+    # https://www.kaggle.com/code/btseytlin/interactive-visualization-with-umap-and-bokeh
+    attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, 'Normal', 5000)
 
-    print(len(y))
-    manifold = umap.UMAP().fit(X, y)
-    umap_plot.points(manifold, labels=y, theme="fire")
+    y_, uniques = pd.factorize(attack_cat_data.attack_cat, sort=True)
+    y_uniques = np.unique(y_)
+    X = attack_cat_data.drop('Label', axis=1)
+    X = X.drop('attack_cat', axis=1)
+    # print("y_:",y_)
+    dict_num_to_attack_cat = dict(zip(y_uniques, uniques))
+    dict_attack_cat_to_num = dict(zip(uniques, y_uniques))
+    # print(dict_num_to_attack_cat)
+    y = [dict_num_to_attack_cat[fact] for fact in y_]
+    ydf = pd.DataFrame({'y': y})
+    # print(y)
+    manifold = umap.UMAP(n_neighbors=20, min_dist=0.75, n_components=2, metric='euclidean').fit(X, y_)
+    embedding = manifold.transform(X)
+    tr_x, tr_y = embedding[:, 0], embedding[:, 1]
+    print(embedding.shape)
+
+    plt.figure(figsize=(15, 10))
+    sns.scatterplot(x=tr_x, y=tr_y, hue=np.array(y_), palette="deep")
+    plt.axis('off')
+    plt.legend(title='Categories', loc='upper left', labels=uniques)
+    plt.gca().set_aspect('equal', 'datalim')
+    plt.title('UMAP projection of unsw-dataset', fontsize=12)
+    plt.show()
