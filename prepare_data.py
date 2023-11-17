@@ -4,18 +4,21 @@ from functions import numeric_features
 from functions import non_numeric_features
 from sklearn.utils import resample
 
+
 def standardize(raw_data):
     print('standardizing data')
-    scaler = StandardScaler()
-    raw_data_numeric_std = pd.DataFrame(data=scaler.fit_transform(raw_data[numeric_features(raw_data)]),columns=numeric_features(raw_data))
-
-    print(raw_data_numeric_std.head())
+    #https://towardsdatascience.com/methods-for-normality-test-with-application-in-python-bb91b49ed0f5
+    scaler = StandardScaler(with_std=True, with_mean=True)
+    raw_data_numeric_std = pd.DataFrame(data=scaler.fit_transform(raw_data[numeric_features(raw_data)]),
+                                        columns=numeric_features(raw_data))
     raw_data_numeric_std.reset_index(inplace=True)
-    print(raw_data.head())
-    raw_data.reset_index( inplace=True)
-    #raw_data_std = pd.merge(raw_data_numeric_std, raw_data[non_numeric_features()], left_index=True, right_index=True)
-    cls = non_numeric_features()
-    raw_data = pd.concat( [raw_data[cls],raw_data_numeric_std], axis=1)
+    print('mean')
+    print(raw_data_numeric_std.mean(axis=0))
+    print('std')
+    print(raw_data_numeric_std.std(axis=0))
+
+    raw_data.reset_index(inplace=True)
+    raw_data = pd.concat([raw_data[non_numeric_features()], raw_data_numeric_std], axis=1)
     return raw_data
 
 
@@ -35,10 +38,11 @@ def filter_on_attack_cat(raw_data, attack_cat="Normal"):
 def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_other_attacks=True):
     raw_data_tmp = raw_data.copy()
     number_of_attack_cat = 0
-    number_of_normal =0
+    number_of_normal = 0
     if attack_cat != 'Normal':
         if exclude_other_attacks:
-            raw_data_tmp.drop(raw_data_tmp[~raw_data_tmp['attack_cat'].isin([attack_cat, 'Normal'])].index, inplace=True)
+            raw_data_tmp.drop(raw_data_tmp[~raw_data_tmp['attack_cat'].isin([attack_cat, 'Normal'])].index,
+                              inplace=True)
         else:
             raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'Label'] = 0
             raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'attack_cat'] = "Normal"
@@ -46,11 +50,10 @@ def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_oth
         number_of_attack_cat = len(raw_data_tmp[raw_data_tmp['attack_cat'] == attack_cat])
         number_of_normal = len(raw_data_tmp[raw_data_tmp['attack_cat'] == "Normal"])
     if attack_cat == 'Normal':
-        #raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'attack_cat'] = "Normal"
-        #Todo evenly spread attacks
+        # raw_data_tmp.loc[raw_data_tmp['attack_cat'] != attack_cat, 'attack_cat'] = "Normal"
+        # Todo evenly spread attacks
         number_of_attack_cat = len(raw_data_tmp[raw_data_tmp['attack_cat'] != 'Normal'])
         number_of_normal = len(raw_data_tmp[raw_data_tmp['attack_cat'] == "Normal"])
-
 
     if attack_cat != 'Normal':
         X_attack = raw_data_tmp[raw_data_tmp.attack_cat == attack_cat]

@@ -15,7 +15,7 @@ test = False
 # execute=3 lasso
 
 
-execute = 5
+execute = 1
 
 sns.set_style("darkgrid")
 

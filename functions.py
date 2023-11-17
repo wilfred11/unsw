@@ -22,7 +22,7 @@ def non_numeric_features():
 
 
 def numeric_features(raw_data):
-    return [item for item in raw_data.columns if item not in non_numeric_features()]
+    return [item for item in raw_data.columns if item not in (non_numeric_features() + ip_port_features()) ]
 
 
 def features_to_be_denominalized():
@@ -38,6 +38,9 @@ def non_numeric_features_to_keep(include_targets=True):
 
 def irrelevant_features():
     return ['Ltime', 'Stime', 'srcip', 'sport', 'dstip', 'dsport']
+
+def ip_port_features():
+    return ['srcip', 'sport', 'dstip', 'dsport']
 
 
 def denominalized_and_boolean_features(raw_data, include_targets=False):

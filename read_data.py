@@ -14,8 +14,8 @@ def clean_data(raw_data):
     raw_data['ct_flw_http_mthd'] = raw_data['ct_flw_http_mthd'].replace('', 0)
     raw_data['is_ftp_login'] = raw_data['is_ftp_login'].replace('', 0)
     raw_data['attack_cat'] = raw_data['attack_cat'].replace('Backdoor', 'Backdoors')
-    for feat in irrelevant_features():
-        raw_data.drop(feat, axis=1, inplace=True)
+    #for feat in irrelevant_features():
+    #    raw_data.drop(feat, axis=1, inplace=True)
     return raw_data
 
 
@@ -35,17 +35,22 @@ def info(raw_data):
     print("\n")
     rd_attacks = raw_data[raw_data['attack_cat'] != 'Normal']
     raw_data.attack_cat.value_counts(normalize=False).to_csv(read_prepare_dir() + '/' + 'attack_cat_counts.csv')
+    with open("attack_cat_counts.txt", "w") as text_file:
+        text_file.write(raw_data.attack_cat.value_counts(normalize=False).to_frame().to_latex())
     print("\n")
-    #rd_attacks.attack_cat.value_counts(normalize=False).plot(kind='bar', figsize=(10, 8))
-    plt.figure(figsize=(12, 7))
-    #plt.grid()
-    sns.barplot(x=rd_attacks.attack_cat.value_counts().index, y=rd_attacks.attack_cat.value_counts()).set(title='Aantal aanvallen per soort')
+    # rd_attacks.attack_cat.value_counts(normalize=False).plot(kind='bar', figsize=(10, 8))
+    plt.figure(figsize=(12, 8))
+    # plt.grid()
+    sns.barplot(x=rd_attacks.attack_cat.value_counts().index, y=rd_attacks.attack_cat.value_counts()).set(title='')
     # sns.set(rc={"figure.figsize": (10, 8)})
     # print(rd_attacks.attack_cat.value_counts(normalize=False))
     # d=rd_attacks.attack_cat.value_counts(normalize=False)
     # sns.barplot(data=d)
     plt.savefig(figures_dir() + '/' + 'attack_counts.png')
     print("number of attacks:" + str(len(rd_attacks)))
+    print("\n")
+    print('number of duplicates')
+    print(raw_data.duplicated(subset=None, keep='first').sum())
 
 
 def read_data(unsw_data, test):
@@ -58,17 +63,34 @@ def read_data(unsw_data, test):
                                            47: 'string'},
                                     converters={39: empty_string_to_nan, 38: empty_string_to_nan,
                                                 37: empty_string_to_nan})
+        print(filename)
         raw_data_list.append(raw_data_part)
 
     raw_data = pd.concat(raw_data_list)
+    print('number of duplicates')
+    print(raw_data.duplicated(subset=None, keep='first').sum())
+    raw_data.drop_duplicates(inplace=True, subset=None, keep='first')
     print(raw_data.shape)
     print(raw_data.head())
+
+    print('number of duplicates')
+    print(raw_data.duplicated(subset=None, keep='first').sum())
+
     if test:
         raw_data = raw_data.sample(frac=0.75)
 
     add_column_names(raw_data)
+
+    print('number of duplicates')
+    print(raw_data.duplicated(subset=None, keep='first').sum())
+    print('cleaning data')
     clean_data(raw_data)
+
+    print('number of duplicates')
+    print(raw_data.duplicated(subset=None, keep='first').sum())
+
     print(raw_data.shape)
     print(raw_data.head())
+
     print("data read, column names added, data cleaned")
     return raw_data

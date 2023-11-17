@@ -134,6 +134,8 @@ def create_column_name(row):
 def handle_categorical_data(raw_data):
     for feature in features_to_be_denominalized():
         ct = pd.crosstab(raw_data[feature], raw_data['attack_cat'], normalize='index').round(2)
+        with open(feature_reduction_dir() + '/' + feature + "-attack-ct.txt", "w") as text_file:
+            text_file.write(ct.to_latex())
         ct.to_excel(feature_reduction_dir() + '/' + feature + '-attack-ct.xlsx')
         ct = ct.multiply(10)
         ct = ct.apply(np.ceil)
@@ -141,6 +143,7 @@ def handle_categorical_data(raw_data):
         l = ct.columns.to_list()
         ct = ct.reset_index()
         result = ct.groupby(l, as_index=False).agg({feature: lambda x: list(x)})
+        result.to_excel(feature_reduction_dir() + '/' + feature + '-attack-gb.xlsx')
         df = pd.DataFrame()
         df = pd.DataFrame({'feat': result[feature], 'feat_agg': result[feature]})
         df = df.explode('feat')

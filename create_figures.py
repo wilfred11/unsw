@@ -89,6 +89,8 @@ def pairplot(raw_data, attack_cat, size):
 
 def my_umap(raw_data):
     # https://www.kaggle.com/code/btseytlin/interactive-visualization-with-umap-and-bokeh
+    # https://datagy.io/matplotlib-3d-scatterplot/
+    # https://datagy.io/python-seaborn-scatterplot/
     attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, 'Normal', 5000)
 
     y_, uniques = pd.factorize(attack_cat_data.attack_cat, sort=True)
