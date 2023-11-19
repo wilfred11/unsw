@@ -68,21 +68,21 @@ def read_data(unsw_data, test):
 
     raw_data = pd.concat(raw_data_list)
     print('number of duplicates')
-    print(raw_data.duplicated(subset=None, keep='first').sum())
+    #print(raw_data.duplicated(subset=None, keep='first').sum())
     raw_data.drop_duplicates(inplace=True, subset=None, keep='first')
     print(raw_data.shape)
     print(raw_data.head())
 
-    print('number of duplicates')
-    print(raw_data.duplicated(subset=None, keep='first').sum())
+    #print('number of duplicates')
+    #print(raw_data.duplicated(subset=None, keep='first').sum())
 
     if test:
         raw_data = raw_data.sample(frac=0.75)
 
     add_column_names(raw_data)
 
-    print('number of duplicates')
-    print(raw_data.duplicated(subset=None, keep='first').sum())
+    #print('number of duplicates')
+    #print(raw_data.duplicated(subset=None, keep='first').sum())
     print('cleaning data')
     clean_data(raw_data)
 

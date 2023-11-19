@@ -1,13 +1,35 @@
 import pandas as pd
 import seaborn as sns
+import numpy as np
+import scipy
+from matplotlib import pyplot as plt
+
 from create_figures import create_results_plot_all, correlated_features, pairplot, my_umap
-from functions import unsw_data, cleanup_project_dirs, external_data_dir, feature_reduction_dir
+from functions import unsw_data, cleanup_project_dirs, external_data_dir, feature_reduction_dir, numeric_features, \
+    read_prepare_dir
 from read_data import read_data, info
 from inspect_data import inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize
 from project import test_classifiers, handle_categorical_data, reduce_categories, reduce_features_lasso, \
     train_reduce_test
 from wakepy import keep
+from scipy import stats
+
+
+def feature_props(column_values, column_props_global, column_name, column_description, size):
+    column_values_sampled = column_values.sample(size, random_state=0)
+    new_row1 = {'name': column_name, 'description': column_description,
+                'max_value': column_values.max(),
+                'min_value': column_values.min(),
+                'kurtosis': scipy.stats.kurtosis(column_values_sampled,  bias=True),
+                'skewness': scipy.stats.skew(column_values_sampled, bias=True),
+                'normal': scipy.stats.normaltest(column_values_sampled)[1] > 0.5}
+
+    column_props_global = pd.concat([column_props_global, pd.DataFrame([new_row1])], ignore_index=True)
+    column_props_global.to_excel(read_prepare_dir() + '/' + 'column-props.xlsx')
+    sns.histplot(data=column_values_sampled.to_frame(), x=column_name)
+    plt.show()
+
 
 test = False
 # execute=1: read data, handle categorical data, standardize data, denominalize data, correlated features, save prepared data
@@ -15,7 +37,7 @@ test = False
 # execute=3 lasso
 
 
-execute = 1
+execute = 6
 
 sns.set_style("darkgrid")
 
@@ -25,7 +47,6 @@ if execute == 2:
 
         # test_classifiers(raw_data, test)
         test_classifiers(raw_data, test, ['dt', 'svm'], 1000)
-
 
         # TODO find optimal features
         # TODO train model with optimal features
@@ -56,13 +77,13 @@ elif execute == 1:
 
         handle_categorical_data(raw_data)
         raw_data = reduce_categories(raw_data)
-        #print(raw_data.shape)
-        #print(raw_data.head())
+        # print(raw_data.shape)
+        # print(raw_data.head())
         # TODO handle outliers
         raw_data = standardize(raw_data)
 
-        #print(raw_data.shape)
-        #print(raw_data.head())
+        # print(raw_data.shape)
+        # print(raw_data.head())
 
         proto = raw_data.proto.copy()
         service = raw_data.service.copy()
@@ -84,8 +105,8 @@ elif execute == 1:
         raw_data['is_sm_ips_ports'] = is_sm_ips_ports
 
         raw_data = denominalize(raw_data)
-        #print(raw_data.shape)
-        #print(raw_data.head())
+        # print(raw_data.shape)
+        # print(raw_data.head())
 
         attack_cat = raw_data.attack_cat.copy()
         Label = raw_data.Label.copy()
@@ -120,6 +141,14 @@ elif execute == 5:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=0)
         my_umap(raw_data)
+
+elif execute == 6:
+    column_props = pd.DataFrame()
+    raw_data = read_data(unsw_data, test)
+    c = numeric_features(raw_data)
+    rd = raw_data[c].copy()
+    feature_props(rd['ct_src_dport_ltm'], column_props, 'ct_src_dport_ltm', 'column_description', 1000)
+
 
 else:
     corr_mat = pd.read_pickle(feature_reduction_dir() + "/feature_corrs.pkl")

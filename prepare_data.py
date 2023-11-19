@@ -3,11 +3,13 @@ from sklearn.preprocessing import StandardScaler
 from functions import numeric_features
 from functions import non_numeric_features
 from sklearn.utils import resample
+from scipy import stats
 
 
 def standardize(raw_data):
     print('standardizing data')
-    #https://towardsdatascience.com/methods-for-normality-test-with-application-in-python-bb91b49ed0f5
+    # https://towardsdatascience.com/methods-for-normality-test-with-application-in-python-bb91b49ed0f5
+
     scaler = StandardScaler(with_std=True, with_mean=True)
     raw_data_numeric_std = pd.DataFrame(data=scaler.fit_transform(raw_data[numeric_features(raw_data)]),
                                         columns=numeric_features(raw_data))
