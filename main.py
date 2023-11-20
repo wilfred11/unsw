@@ -3,10 +3,11 @@ import seaborn as sns
 import numpy as np
 import scipy
 from matplotlib import pyplot as plt
+from numpy import arange
 
 from create_figures import create_results_plot_all, correlated_features, pairplot, my_umap
 from functions import unsw_data, cleanup_project_dirs, external_data_dir, feature_reduction_dir, numeric_features, \
-    read_prepare_dir
+    read_prepare_dir, read_prepare_figs_dir
 from read_data import read_data, info
 from inspect_data import inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize
@@ -21,14 +22,31 @@ def feature_props(column_values, column_props_global, column_name, column_descri
     new_row1 = {'name': column_name, 'description': column_description,
                 'max_value': column_values.max(),
                 'min_value': column_values.min(),
-                'kurtosis': scipy.stats.kurtosis(column_values_sampled,  bias=True),
+                'kurtosis': scipy.stats.kurtosis(column_values_sampled, bias=True),
                 'skewness': scipy.stats.skew(column_values_sampled, bias=True),
-                'normal': scipy.stats.normaltest(column_values_sampled)[1] > 0.5}
+                'normal': scipy.stats.normaltest(column_values_sampled)[1] > 0.5,
+                'nunique_values': column_values.nunique()}
 
     column_props_global = pd.concat([column_props_global, pd.DataFrame([new_row1])], ignore_index=True)
     column_props_global.to_excel(read_prepare_dir() + '/' + 'column-props.xlsx')
-    sns.histplot(data=column_values_sampled.to_frame(), x=column_name)
-    plt.show()
+
+    plt.figure(figsize=(8, 5))
+    # sns.histplot(data=column_values_sampled.to_frame(), x=column_name)
+    # plt.savefig(read_prepare_figs_dir() + '/' + 'hist-' + column_name + '.png')
+
+    hist_values, bin_edges = np.histogram(column_values_sampled)
+    plt.bar(x=bin_edges[:-1], height=hist_values / len(column_values_sampled), width=np.diff(bin_edges), align='edge')
+    # y = arange(0, hist_values.max(), hist_values.max()/5)
+    # plt.yticks(y)
+    plt.savefig(read_prepare_figs_dir() + '/' + column_name + '-hist.png')
+    plt.close('all')
+
+    with open(read_prepare_figs_dir() + '/' + column_name + '-tab.txt', 'w', encoding='utf-8') as text_file:
+        nr = pd.DataFrame(new_row1.items())
+        text_file.write(nr.to_latex(header=False, index=False))
+    return column_props_global
+
+    # plt.show()
 
 
 test = False
@@ -143,13 +161,31 @@ elif execute == 5:
         my_umap(raw_data)
 
 elif execute == 6:
+    # https://www.kaggle.com/code/khairulislam/unsw-nb15- eda
     column_props = pd.DataFrame()
+    cleanup_project_dirs()
     raw_data = read_data(unsw_data, test)
+
+    columns_info = pd.read_csv(external_data_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
+    columns_info['Name'] = columns_info['Name'].str.strip()
+
+    name_desc_dict = dict(zip(columns_info.Name, columns_info.Description))
+
+    # raw_data.columns = columns['Name']
+
     c = numeric_features(raw_data)
     rd = raw_data[c].copy()
-    feature_props(rd['ct_src_dport_ltm'], column_props, 'ct_src_dport_ltm', 'column_description', 1000)
+    i = 0
+    for feature_name, feature_values in rd.items():
+        print(feature_name)
+        print('#', i)
 
+        column_props = feature_props(feature_values, column_props, feature_name, name_desc_dict[feature_name], 10000)
+        i = i + 1
 
+        # feature_props(rd['ct_src_dport_ltm'], column_props, 'ct_src_dport_ltm', 'column_description', 1000)
+
+    # column_props.to_excel(read_prepare_dir() + '/' + 'column_props.xlsx')
 else:
     corr_mat = pd.read_pickle(feature_reduction_dir() + "/feature_corrs.pkl")
     features_corr = pd.DataFrame({'column': [], 'other_column': [], 'correlation': []})

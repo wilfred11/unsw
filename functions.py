@@ -4,9 +4,12 @@ import os
 
 
 def empty_string_to_nan(x):
-    if not x.isspace():
-        return x
-    return np.nan
+    if not x.isspace() and not x == '':
+        return np.int64(x)
+    elif x.isspace() or x == '':
+        return 0
+    else:
+        return np.nan
 
 
 def unsw_data(test):
@@ -22,7 +25,7 @@ def non_numeric_features():
 
 
 def numeric_features(raw_data):
-    return [item for item in raw_data.columns if item not in (non_numeric_features() + ip_port_features()) ]
+    return [item for item in raw_data.columns if item not in (non_numeric_features() + ip_port_features())]
 
 
 def features_to_be_denominalized():
@@ -38,6 +41,7 @@ def non_numeric_features_to_keep(include_targets=True):
 
 def irrelevant_features():
     return ['Ltime', 'Stime', 'srcip', 'sport', 'dstip', 'dsport']
+
 
 def ip_port_features():
     return ['srcip', 'sport', 'dstip', 'dsport']
@@ -67,8 +71,9 @@ def cleanup_project_dirs():
     os.makedirs(data_dir(), exist_ok=True)
     os.makedirs(test_classifiers_dir(), exist_ok=True)
     os.makedirs(read_prepare_dir(), exist_ok=True)
+    os.makedirs(read_prepare_figs_dir(), exist_ok=True)
     os.makedirs(feature_reduction_dir(), exist_ok=True)
-    os.makedirs(feature_reduction_dir()+'/figs', exist_ok=True)
+    os.makedirs(feature_reduction_dir() + '/figs', exist_ok=True)
 
 
 def external_data_dir():
@@ -89,6 +94,10 @@ def test_classifiers_dir():
 
 def read_prepare_dir():
     return data_dir() + '/read_prepare'
+
+
+def read_prepare_figs_dir():
+    return read_prepare_dir() + '/figs'
 
 
 def feature_reduction_dir():
