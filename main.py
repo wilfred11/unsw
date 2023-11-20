@@ -38,12 +38,12 @@ def feature_props(column_values, column_props_global, column_name, column_descri
     plt.bar(x=bin_edges[:-1], height=hist_values / len(column_values_sampled), width=np.diff(bin_edges), align='edge')
     # y = arange(0, hist_values.max(), hist_values.max()/5)
     # plt.yticks(y)
-    plt.savefig(read_prepare_figs_dir() + '/' + column_name + '-hist.png')
+    plt.savefig(read_prepare_figs_dir() + '/' + column_name.replace('_', '-') + '-hist.png')
     plt.close('all')
 
-    with open(read_prepare_figs_dir() + '/' + column_name + '-tab.txt', 'w', encoding='utf-8') as text_file:
+    with open(read_prepare_figs_dir() + '/' + column_name.replace('_', '-') + '-tab.txt', 'w', encoding='utf-8') as text_file:
         nr = pd.DataFrame(new_row1.items())
-        text_file.write(nr.to_latex(header=False, index=False))
+        text_file.write(nr.to_latex(header=False, index=False).replace('_', '\_').replace('\midrule', '').replace('{ll}', '{p{1in}p{1.5in}}'))
     return column_props_global
 
     # plt.show()
@@ -180,7 +180,7 @@ elif execute == 6:
         print(feature_name)
         print('#', i)
 
-        column_props = feature_props(feature_values, column_props, feature_name, name_desc_dict[feature_name], 10000)
+        column_props = feature_props(feature_values, column_props, feature_name, name_desc_dict[feature_name], 250000)
         i = i + 1
 
         # feature_props(rd['ct_src_dport_ltm'], column_props, 'ct_src_dport_ltm', 'column_description', 1000)
