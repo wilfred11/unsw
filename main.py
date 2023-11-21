@@ -19,7 +19,7 @@ test = False
 # execute=3 lasso
 
 
-execute = 1
+execute = 5
 
 sns.set_style("darkgrid")
 
@@ -29,6 +29,8 @@ if execute == 2:
 
         # test_classifiers(raw_data, test)
         test_classifiers(raw_data, test, ['dt', 'svm'], 1000)
+
+        create_results_plot_all()
 
         # TODO find optimal features
         # TODO train model with optimal features
@@ -97,12 +99,14 @@ elif execute == 1:
         raw_data = raw_data.drop('attack_cat', axis=1)
         raw_data = raw_data.drop('Label', axis=1)
 
-        correlated_features(raw_data)
+        # correlated_features(raw_data)
 
         raw_data['attack_cat'] = attack_cat
         raw_data['Label'] = Label
 
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index=False)
+
+        #create_results_plot_all()
         # reduce_features(raw_data, 'Normal')
         # https://medium.com/analytics-vidhya/feature-selection-using-scikit-learn-5b4362e0c19b
         # https: // thepythoncode.com / article / dimensionality - reduction - using - feature - extraction - sklearn
@@ -125,22 +129,3 @@ elif execute == 5:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=0)
         my_umap(raw_data)
-
-else:
-    corr_mat = pd.read_pickle(feature_reduction_dir() + "/feature_corrs.pkl")
-    features_corr = pd.DataFrame({'column': [], 'other_column': [], 'correlation': []})
-
-    columns = corr_mat.columns
-    for i in range(corr_mat.shape[0]):
-        for j in range(i + 1, corr_mat.shape[0]):
-            if corr_mat.iloc[i, j] >= 0.95 or corr_mat.iloc[i, j] <= -0.95:
-                print(f"{columns[i]:20s} {columns[j]:20s} {corr_mat.iloc[i, j]}")
-                new_row = {'column': columns[i],
-                           'other_column': columns[j],
-                           'correlation': corr_mat.iloc[i, j]
-                           }
-
-                features_corr = pd.concat([features_corr, pd.DataFrame([new_row])], ignore_index=True)
-    print(features_corr)
-    features_corr.to_excel(external_data_dir() + '/' + 'features_corr.xlsx', index=False)
-    create_results_plot_all()
