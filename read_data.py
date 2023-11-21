@@ -10,9 +10,6 @@ from functions import empty_string_to_nan, irrelevant_features, external_data_di
 def clean_data(raw_data):
     raw_data['attack_cat'] = raw_data['attack_cat'].replace(np.nan, 'Normal')
     raw_data['attack_cat'] = raw_data['attack_cat'].str.strip()
-    # raw_data.ct_ftp_cmd = raw_data.ct_ftp_cmd.fillna(0)
-    # raw_data['ct_flw_http_mthd'] = raw_data['ct_flw_http_mthd'].replace('', 0)
-    # raw_data['is_ftp_login'] = raw_data['is_ftp_login'].replace('', 0)
     raw_data['attack_cat'] = raw_data['attack_cat'].replace('Backdoor', 'Backdoors')
     # for feat in irrelevant_features():
     #    raw_data.drop(feat, axis=1, inplace=True)
@@ -38,14 +35,8 @@ def info(raw_data):
     with open("attack_cat_counts.txt", "w") as text_file:
         text_file.write(raw_data.attack_cat.value_counts(normalize=False).to_frame().to_latex())
     print("\n")
-    # rd_attacks.attack_cat.value_counts(normalize=False).plot(kind='bar', figsize=(10, 8))
     plt.figure(figsize=(12, 8))
-    # plt.grid()
     sns.barplot(x=rd_attacks.attack_cat.value_counts().index, y=rd_attacks.attack_cat.value_counts()).set(title='')
-    # sns.set(rc={"figure.figsize": (10, 8)})
-    # print(rd_attacks.attack_cat.value_counts(normalize=False))
-    # d=rd_attacks.attack_cat.value_counts(normalize=False)
-    # sns.barplot(data=d)
     plt.savefig(figures_dir() + '/' + 'attack_counts.png')
     print("number of attacks:" + str(len(rd_attacks)))
     print("\n")
@@ -68,33 +59,16 @@ def read_data(unsw_data, test):
                                     converters={'ct_ftp_cmd': empty_string_to_nan, 'is_ftp_login': empty_string_to_nan,
                                                 'ct_flw_http_mthd': empty_string_to_nan},
                                     encoding='ISO-8859-1')
-        print(filename)
-        print('1:', raw_data_part.columns[1])
-        print('3:', raw_data_part.columns[3])
-        print('47:', raw_data_part.columns[47])
-        print('37:', raw_data_part.columns[37])
-        print('38:', raw_data_part.columns[38])
-        print('39:', raw_data_part.columns[39])
         raw_data_list.append(raw_data_part)
 
     raw_data = pd.concat(raw_data_list)
-    print(raw_data.head(5))
-    print('number of duplicates')
-    # print(raw_data.duplicated(subset=None, keep='first').sum())
     raw_data.drop_duplicates(inplace=True, subset=None, keep='first')
     print(raw_data.shape)
     print(raw_data.head())
 
-    # print('number of duplicates')
-    # print(raw_data.duplicated(subset=None, keep='first').sum())
-
     if test:
         raw_data = raw_data.sample(frac=0.75)
 
-    # add_column_names(raw_data)
-
-    # print('number of duplicates')
-    # print(raw_data.duplicated(subset=None, keep='first').sum())
     print('cleaning data')
     clean_data(raw_data)
 
@@ -102,7 +76,5 @@ def read_data(unsw_data, test):
     print(raw_data.duplicated(subset=None, keep='first').sum())
 
     print(raw_data.shape)
-    print(raw_data.head())
-
     print("data read, column names added, data cleaned")
     return raw_data

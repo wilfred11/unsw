@@ -34,11 +34,11 @@ def feature_props(column_values, column_props_global, column_name, column_descri
     # sns.histplot(data=column_values_sampled.to_frame(), x=column_name)
     # plt.savefig(read_prepare_figs_dir() + '/' + 'hist-' + column_name + '.png')
 
-    hist_values, bin_edges = np.histogram(column_values_sampled)
+    hist_values, bin_edges = np.histogram(column_values_sampled, bins=20)
     plt.bar(x=bin_edges[:-1], height=hist_values / len(column_values_sampled), width=np.diff(bin_edges), align='edge')
-    # y = arange(0, hist_values.max(), hist_values.max()/5)
-    # plt.yticks(y)
+    plt.xlabel(column_name)
     plt.savefig(read_prepare_figs_dir() + '/' + column_name.replace('_', '-') + '-hist.png')
+
     plt.close('all')
 
     with open(read_prepare_figs_dir() + '/' + column_name.replace('_', '-') + '-tab.txt', 'w', encoding='utf-8') as text_file:
