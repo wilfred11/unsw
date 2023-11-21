@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import scipy
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
@@ -8,8 +9,8 @@ from numpy import unique
 from numpy import where
 from sklearn.datasets import make_classification
 from sklearn.cluster import Birch
-from matplotlib import pyplot
-from functions import numeric_features, data_dir, read_prepare_dir
+from matplotlib import pyplot, pyplot as plt
+from functions import numeric_features, data_dir, read_prepare_dir, external_data_dir, read_prepare_figs_dir
 
 
 def crosstab_service_to_attack_cat(raw_data):
@@ -79,5 +80,52 @@ def find_clustering(raw_data):
 def inspect_for_empty_or_na_columns(raw_data):
     data_na = raw_data.isna().sum()
     data_empty = raw_data.eq('').sum()
-    data_na.to_csv(read_prepare_dir()+'/'+ 'columns_na_count.csv')
+    data_na.to_csv(read_prepare_dir() + '/' + 'columns_na_count.csv')
     data_empty.to_csv(read_prepare_dir() + '/' + 'columns_empty_count.csv')
+
+
+def feature_props(column_values, column_props_global, column_name, column_description, size):
+    column_values_sampled = column_values.sample(size, random_state=0)
+    feat_props = {'name': column_name, 'description': column_description,
+                  'max_value': column_values.max(),
+                  'min_value': column_values.min(),
+                  'kurtosis': scipy.stats.kurtosis(column_values_sampled, bias=True),
+                  'skewness': scipy.stats.skew(column_values_sampled, bias=True),
+                  'normal': scipy.stats.normaltest(column_values_sampled)[1] > 0.5,
+                  'nunique_values': column_values.nunique()}
+
+    column_props_global = pd.concat([column_props_global, pd.DataFrame([feat_props])], ignore_index=True)
+    column_props_global.to_excel(read_prepare_dir() + '/' + 'column-props.xlsx')
+
+    plt.figure(figsize=(8, 5))
+    hist_values, bin_edges = np.histogram(column_values_sampled, bins=20)
+    plt.bar(x=bin_edges[:-1], height=hist_values / len(column_values_sampled), width=np.diff(bin_edges), align='edge')
+    plt.xlabel(column_name)
+    plt.savefig(read_prepare_figs_dir() + '/' + column_name.replace('_', '-') + '-hist.png')
+
+    plt.close('all')
+
+    with open(read_prepare_figs_dir() + '/' + column_name.replace('_', '-') + '-tab.txt', 'w',
+              encoding='utf-8') as text_file:
+        fp = pd.DataFrame(feat_props.items())
+        text_file.write(
+            fp.to_latex(header=False, index=False).replace('_', '\_').replace('\midrule', '').replace('{ll}',
+                                                                                                      '{p{1in}p{1.5in}}'))
+    return column_props_global
+
+
+def numeric_feature_inspection(raw_data):
+    # https://www.kaggle.com/code/khairulislam/unsw-nb15-eda
+    column_props = pd.DataFrame()
+    columns_info = pd.read_csv(external_data_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
+    columns_info['Name'] = columns_info['Name'].str.strip()
+    name_desc_dict = dict(zip(columns_info.Name, columns_info.Description))
+
+    c = numeric_features(raw_data)
+    rd = raw_data[c].copy()
+    i = 0
+    for feature_name, feature_values in rd.items():
+        print(feature_name)
+        print('#', i)
+        column_props = feature_props(feature_values, column_props, feature_name, name_desc_dict[feature_name], 250000)
+        i = i + 1

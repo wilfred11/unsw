@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from functions import numeric_features
 from functions import non_numeric_features
 from sklearn.utils import resample
@@ -23,6 +23,23 @@ def standardize(raw_data):
     raw_data = pd.concat([raw_data[non_numeric_features()], raw_data_numeric_std], axis=1)
     return raw_data
 
+
+def min_max(raw_data):
+    print('standardizing data')
+    # https://towardsdatascience.com/methods-for-normality-test-with-application-in-python-bb91b49ed0f5
+
+    scaler = MinMaxScaler()
+    raw_data_numeric_std = pd.DataFrame(data=scaler.fit_transform(raw_data[numeric_features(raw_data)]),
+                                        columns=numeric_features(raw_data))
+    raw_data_numeric_std.reset_index(inplace=True)
+    print('min')
+    print(raw_data_numeric_std.min(axis=0))
+    print('max')
+    print(raw_data_numeric_std.max(axis=0))
+
+    raw_data.reset_index(inplace=True)
+    raw_data = pd.concat([raw_data[non_numeric_features()], raw_data_numeric_std], axis=1)
+    return raw_data
 
 def denominalize(raw_data):
     print('denominalizing data')
