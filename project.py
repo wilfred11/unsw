@@ -13,10 +13,53 @@ from sklearn.feature_selection import SelectKBest, SelectPercentile, mutual_info
 
 from functions import test_classifiers_dir, feature_reduction_dir, features_to_be_denominalized, external_data_dir
 from model_functions import classify, grid_search, reduce_features_rfecv
-from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns
+from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns, get_balanced_dataset
 
 
 # https://www.rasgoml.com/feature-engineering-tutorials/feature-selection-using-mutual-information-in-scikit-learn
+
+
+def test_classifiers_basic(raw_data, kinds, size):
+    # cats = list(raw_data.attack_cat.unique())
+    scores_pre = pd.DataFrame()
+    scores_post = pd.DataFrame()
+    optimal_params = {}
+    for kind in kinds:
+        optimal_params[kind] = pd.DataFrame()
+
+    print('**************************')
+    balanced_data = get_balanced_dataset(raw_data, size)
+    X, y = remove_target_columns(balanced_data)
+
+    for kind in kinds:
+        clf = get_classifier(kind)
+        pg = get_params(kind)
+        print('optimizing ' + kind)
+        opt_params = grid_search(clf, pg, X, y)
+        params = pd.DataFrame(opt_params[0], index=[0])
+        params_indexed = params.set_index([pd.Series('Normal')])
+        optimal_params[kind] = pd.concat([optimal_params[kind], params_indexed])
+
+        clf_opt = get_classifier(kind, opt_params[0])
+        print('scoring ' + kind)
+        scores_opt = classify(clf_opt, X, y)
+        scores_opt = scores_opt.T
+        scores_opt = scores_opt.set_index(
+            [pd.Series('Normal').repeat(len(scores_opt)), pd.Series(kind).repeat(len(scores_opt)),
+             scores_opt.index.to_series()])
+        scores_post = pd.concat([scores_post, scores_opt])
+
+    for kind in kinds:
+        optimal_params[kind].to_excel(test_classifiers_dir() + '/' + kind + '_params.xlsx')
+        optimal_params[kind].to_pickle(test_classifiers_dir() + '/' + kind + '_params.pkl')
+
+    scores_pre.to_pickle(test_classifiers_dir() + '/' + 'clf_results_pre.pkl')
+    scores_pre.to_excel(test_classifiers_dir() + '/' + 'clf_results_pre.xlsx')
+    scores_post.to_pickle(test_classifiers_dir() + '/' + 'clf_results_post.pkl')
+    scores_post.to_excel(test_classifiers_dir() + '/' + 'clf_results_post.xlsx')
+
+
+
 
 def test_classifiers(raw_data, test, kinds, size, cats, pre):
     # cats = list(raw_data.attack_cat.unique())

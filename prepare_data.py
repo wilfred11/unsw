@@ -2,6 +2,7 @@ import mpu
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.feature_selection import VarianceThreshold
 from functions import numeric_features, features_to_be_denominalized, feature_reduction_dir
 from functions import non_numeric_features
 from sklearn.utils import resample
@@ -72,19 +73,42 @@ def prepare_data_for_umap(raw_data):
     return X_complete
 
 
-def prepare_data_for_normal(raw_data, size):
+def get_balanced_dataset(raw_data, size):
     raw_data_tmp = raw_data.copy()
     X_complete = pd.DataFrame()
     for attack_cat in raw_data_tmp.attack_cat.unique():
         tmp_attack_cat = raw_data_tmp[raw_data_tmp['attack_cat'] == attack_cat]
-        if len(tmp_attack_cat) >0:
+        if len(tmp_attack_cat) > 0:
             if len(tmp_attack_cat) < size / len(raw_data_tmp.attack_cat.unique()):
-                X_attack_cat = resample(tmp_attack_cat, replace=True, n_samples=int(size / len(raw_data_tmp.attack_cat.unique())), random_state=0)
+                X_attack_cat = resample(tmp_attack_cat, replace=True,
+                                        n_samples=int(size / len(raw_data_tmp.attack_cat.unique())), random_state=0)
             else:
-                X_attack_cat = resample(tmp_attack_cat, replace=False, n_samples=int(size / len(raw_data_tmp.attack_cat.unique())), random_state=0)
+                X_attack_cat = resample(tmp_attack_cat, replace=False,
+                                        n_samples=int(size / len(raw_data_tmp.attack_cat.unique())), random_state=0)
 
         X_complete = pd.concat([X_complete, X_attack_cat])
     return X_complete
+
+
+def remove_low_variance_columns(raw_data):
+    attack_cat = raw_data.attack_cat.copy()
+    Label = raw_data.Label.copy()
+    raw_data = raw_data.drop('attack_cat', axis=1)
+    raw_data = raw_data.drop('Label', axis=1)
+
+    var_thr = VarianceThreshold(threshold=0.00001)
+    var_thr.fit(raw_data)
+    to_be_deleted = [x for x in map(lambda x, y: x if not y else None, raw_data.columns, var_thr.get_support()) if x is not None]
+
+    print('deleting low variance columns:')
+    print(to_be_deleted)
+
+    for col in to_be_deleted:
+        raw_data = raw_data.drop(col, axis=1)
+
+    raw_data['attack_cat'] = attack_cat
+    raw_data['Label'] = Label
+    return raw_data
 
 
 def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_other_attacks=True, reduce_cats=False,

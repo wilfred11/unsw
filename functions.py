@@ -20,8 +20,7 @@ def unsw_data(test):
 
 
 def non_numeric_features():
-    return ['proto', 'service', 'state', 'is_ftp_login', 'is_sm_ips_ports', 'attack_cat', 'Label',
-            ]
+    return ['proto', 'service', 'state', 'is_ftp_login', 'is_sm_ips_ports', 'attack_cat', 'Label']
 
 
 def numeric_features(raw_data):

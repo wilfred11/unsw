@@ -8,8 +8,8 @@ from functions import unsw_data, cleanup_project_dirs, external_data_dir, featur
 from read_data import read_data, info
 from inspect_data import numeric_feature_inspection, inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize, min_max, handle_categorical_data, reduce_categories, \
-    prepare_data_for_umap, prepare_data_for_normal
-from project import test_classifiers, reduce_features_lasso, train_reduce_test
+    prepare_data_for_umap, get_balanced_dataset, remove_low_variance_columns
+from project import test_classifiers, reduce_features_lasso, train_reduce_test, test_classifiers_basic
 from wakepy import keep
 
 test = False
@@ -18,7 +18,7 @@ test = False
 # execute=3 lasso
 
 
-execute = 1
+execute = 2
 
 sns.set_style("darkgrid")
 
@@ -48,7 +48,7 @@ if execute == 6:
 elif execute == 1:
     with keep.running() as k:
         cleanup_project_dirs()
-        # TODO drop constant columns
+
         raw_data = pd.DataFrame()
 
         raw_data = read_data(unsw_data, test)
@@ -64,15 +64,17 @@ elif execute == 1:
 
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std.csv', index=False)
 
-        raw_data_balanced = prepare_data_for_normal(raw_data, 2000000)
+        raw_data_balanced = get_balanced_dataset(raw_data, 2000000)
 
         handle_categorical_data(raw_data_balanced)
         raw_data = reduce_categories(raw_data)
 
         raw_data = denominalize(raw_data)
 
-        # print(raw_data.shape)
-        # print(raw_data.head())
+        raw_data = remove_low_variance_columns(raw_data)
+
+        print(raw_data.shape)
+        print(raw_data.head())
 
         attack_cat = raw_data.attack_cat.copy()
         Label = raw_data.Label.copy()
@@ -84,7 +86,7 @@ elif execute == 1:
         raw_data['attack_cat'] = attack_cat
         raw_data['Label'] = Label
         print(raw_data.shape)
-        raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom.csv', index=False)
+        raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
         # create_results_plot_all()
         # reduce_features(raw_data, 'Normal')
@@ -93,7 +95,20 @@ elif execute == 1:
 
 elif execute == 2:
     with keep.running() as k:
-        raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std.csv')
+        raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
+        print(raw_data.shape)
+        print(raw_data.head(5))
+        print(raw_data.columns)
+        #raw_data.columns.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var-cols.csv', index=False)
+        test_classifiers_basic(raw_data, ['dt', 'svm'],40000)
+        #test_classifiers(raw_data, test, ['dt', 'svm'], 1000, ['Normal'], False)
+
+
+
+
+elif execute == 3:
+    with keep.running() as k:
+        raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom.csv')
         print(raw_data.shape)
         print(raw_data.head(5))
 
@@ -130,28 +145,21 @@ elif execute == 2:
         # raw_data = reduce_categories(raw_data)
 
 
-
-
-
-
-
-
-
-elif execute == 3:
+elif execute == 4:
     with keep.running() as k:
-        raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=0)
+        raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared_.csv', index_col=0)
         print(raw_data.shape)
         print(raw_data.head())
         # raw_data.head().to_csv(external_data_dir() + '/' + 'raw_data_prepared1.csv', index=False)
         reduce_features_lasso(raw_data)
 
-elif execute == 4:
+elif execute == 5:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=0)
         train_reduce_test(raw_data, ['svm'], ['Normal'], 100000)
 
 
-elif execute == 5:
+elif execute == 6:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_std.csv')
         print(raw_data.head())
