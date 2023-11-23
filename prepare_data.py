@@ -1,9 +1,10 @@
+import mpu
+import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from functions import numeric_features
+from functions import numeric_features, features_to_be_denominalized, feature_reduction_dir
 from functions import non_numeric_features
 from sklearn.utils import resample
-from scipy import stats
 
 
 def standardize(raw_data):
@@ -41,6 +42,7 @@ def min_max(raw_data):
     raw_data = pd.concat([raw_data[non_numeric_features()], raw_data_numeric_std], axis=1)
     return raw_data
 
+
 def denominalize(raw_data):
     print('denominalizing data')
     raw_data = pd.get_dummies(raw_data, columns=["proto"])
@@ -54,7 +56,39 @@ def filter_on_attack_cat(raw_data, attack_cat="Normal"):
     return result
 
 
-def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_other_attacks=True):
+def prepare_data_for_umap(raw_data):
+    raw_data_tmp = raw_data.copy()
+    normal = raw_data_tmp[raw_data_tmp['attack_cat'] == "Normal"]
+    X_attack = pd.DataFrame()
+    # attacks = dict()
+    for attack_cat in raw_data_tmp.attack_cat.unique():
+        if attack_cat != 'Normal':
+            tmp = raw_data_tmp[raw_data_tmp['attack_cat'] == attack_cat]
+            print('tmp:', len(tmp))
+            X_attack = pd.concat([X_attack, tmp])
+
+    X_normal = resample(normal, replace=False, n_samples=int(len(X_attack)), random_state=0)
+    X_complete = pd.concat([X_attack, X_normal])
+    return X_complete
+
+
+def prepare_data_for_normal(raw_data, size):
+    raw_data_tmp = raw_data.copy()
+    X_complete = pd.DataFrame()
+    for attack_cat in raw_data_tmp.attack_cat.unique():
+        tmp_attack_cat = raw_data_tmp[raw_data_tmp['attack_cat'] == attack_cat]
+        if len(tmp_attack_cat) >0:
+            if len(tmp_attack_cat) < size / len(raw_data_tmp.attack_cat.unique()):
+                X_attack_cat = resample(tmp_attack_cat, replace=True, n_samples=int(size / len(raw_data_tmp.attack_cat.unique())), random_state=0)
+            else:
+                X_attack_cat = resample(tmp_attack_cat, replace=False, n_samples=int(size / len(raw_data_tmp.attack_cat.unique())), random_state=0)
+
+        X_complete = pd.concat([X_complete, X_attack_cat])
+    return X_complete
+
+
+def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_other_attacks=True, reduce_cats=False,
+                                         denominalize=False):
     raw_data_tmp = raw_data.copy()
     number_of_attack_cat = 0
     number_of_normal = 0
@@ -89,6 +123,13 @@ def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_oth
         X_attack_max = resample(X_attack, replace=False, n_samples=int(size / 2), random_state=0)
 
     X_complete = pd.concat([X_attack_max, X_normal_max])
+    print(X_complete.head())
+    if reduce_cats:
+        handle_categorical_data(X_complete)
+        X_complete = reduce_categories(X_complete)
+    if denominalize:
+        X_complete = denominalize(X_complete)
+
     raw_data_tmp = None
     return X_complete
 
@@ -107,4 +148,41 @@ def remove_columns(data, columns):
         data = data.drop(col, axis=1).copy()
     return data
 
+
+def create_column_name(row):
+    if len(row['feat_agg']) == 1:
+        return row['feat_agg'][0]
+    elif len(row['feat_agg']) == 2:
+        return row['feat_agg'][0] + '--' + row['feat_agg'][1]
+    elif len(row['feat_agg']) > 2:
+        return row['feat_agg'][0] + '--' + row['feat_agg'][1] + '...'
+
+
+def handle_categorical_data(raw_data):
+    for feature in features_to_be_denominalized():
+        ct = pd.crosstab(raw_data[feature], raw_data['attack_cat'], normalize='index').round(2)
+        with open(feature_reduction_dir() + '/' + feature + "-attack-ct.txt", "w") as text_file:
+            text_file.write(ct.to_latex())
+        ct.to_excel(feature_reduction_dir() + '/' + feature + '-attack-ct.xlsx')
+        ct = ct.multiply(10)
+        ct = ct.apply(np.ceil)
+        ct.to_excel(feature_reduction_dir() + '/' + feature + '-attack-ct-mp.xlsx')
+        l = ct.columns.to_list()
+        ct = ct.reset_index()
+        result = ct.groupby(l, as_index=False).agg({feature: lambda x: list(x)})
+        result.to_excel(feature_reduction_dir() + '/' + feature + '-attack-gb.xlsx')
+        df = pd.DataFrame()
+        df = pd.DataFrame({'feat': result[feature], 'feat_agg': result[feature]})
+        df = df.explode('feat')
+        df['column_name'] = df.apply(lambda x: create_column_name(x), axis=1)
+        df.to_excel(feature_reduction_dir() + '/' + feature + '-attack-aggregated.xlsx')
+        feat_dict = dict(zip(df.feat, df.column_name))
+        mpu.io.write(feature_reduction_dir() + '/' + feature + '_cat_dict.pickle', feat_dict)
+
+
+def reduce_categories(raw_data):
+    for feature in features_to_be_denominalized():
+        feat_dict = mpu.io.read(feature_reduction_dir() + '/' + feature + '_cat_dict.pickle')
+        raw_data = raw_data.replace({feature: feat_dict})
+    return raw_data
 # def split_data(raw_data):

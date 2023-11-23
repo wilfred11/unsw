@@ -18,8 +18,8 @@ from prepare_data import prepare_data_for_specific_attack_cat, remove_target_col
 
 # https://www.rasgoml.com/feature-engineering-tutorials/feature-selection-using-mutual-information-in-scikit-learn
 
-def test_classifiers(raw_data, test, kinds, size):
-    cats = list(raw_data.attack_cat.unique())
+def test_classifiers(raw_data, test, kinds, size, cats, pre):
+    # cats = list(raw_data.attack_cat.unique())
     scores_pre = pd.DataFrame()
     scores_post = pd.DataFrame()
     optimal_params = {}
@@ -29,16 +29,19 @@ def test_classifiers(raw_data, test, kinds, size):
     print(optimal_params)
     for attack_cat in cats:
         print('**************************')
-        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, size)
+        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, denominalize=False ,reduce_cats=False)
+
         X, y = remove_target_columns(attack_cat_data)
         for kind in kinds:
             clf = get_classifier(kind)
-            print('scoring ' + kind + ' ' + attack_cat)
-            scores = classify(clf, X, y)
-            scores = scores.T
-            scores = scores.set_index([pd.Series(attack_cat).repeat(len(scores)), pd.Series(kind).repeat(len(scores)),
-                                       scores.index.to_series()])
-            scores_pre = pd.concat([scores_pre, scores])
+            if pre:
+                print('scoring ' + kind + ' ' + attack_cat)
+                scores = classify(clf, X, y)
+                scores = scores.T
+                scores = scores.set_index(
+                    [pd.Series(attack_cat).repeat(len(scores)), pd.Series(kind).repeat(len(scores)),
+                     scores.index.to_series()])
+                scores_pre = pd.concat([scores_pre, scores])
 
             pg = get_params(kind)
             print('optimizing ' + kind + ' ' + attack_cat)
@@ -122,44 +125,6 @@ def get_params(kind):
             return
 
 
-def create_column_name(row):
-    if len(row['feat_agg']) == 1:
-        return row['feat_agg'][0]
-    elif len(row['feat_agg']) == 2:
-        return row['feat_agg'][0] + '--' + row['feat_agg'][1]
-    elif len(row['feat_agg']) > 2:
-        return row['feat_agg'][0] + '--' + row['feat_agg'][1] + '...'
-
-
-def handle_categorical_data(raw_data):
-    for feature in features_to_be_denominalized():
-        ct = pd.crosstab(raw_data[feature], raw_data['attack_cat'], normalize='index').round(2)
-        with open(feature_reduction_dir() + '/' + feature + "-attack-ct.txt", "w") as text_file:
-            text_file.write(ct.to_latex())
-        ct.to_excel(feature_reduction_dir() + '/' + feature + '-attack-ct.xlsx')
-        ct = ct.multiply(10)
-        ct = ct.apply(np.ceil)
-        ct.to_excel(feature_reduction_dir() + '/' + feature + '-attack-ct-mp.xlsx')
-        l = ct.columns.to_list()
-        ct = ct.reset_index()
-        result = ct.groupby(l, as_index=False).agg({feature: lambda x: list(x)})
-        result.to_excel(feature_reduction_dir() + '/' + feature + '-attack-gb.xlsx')
-        df = pd.DataFrame()
-        df = pd.DataFrame({'feat': result[feature], 'feat_agg': result[feature]})
-        df = df.explode('feat')
-        df['column_name'] = df.apply(lambda x: create_column_name(x), axis=1)
-        df.to_excel(feature_reduction_dir() + '/' + feature + '-attack-aggregated.xlsx')
-        feat_dict = dict(zip(df.feat, df.column_name))
-        mpu.io.write(feature_reduction_dir() + '/' + feature + '_cat_dict.pickle', feat_dict)
-
-
-def reduce_categories(raw_data):
-    for feature in features_to_be_denominalized():
-        feat_dict = mpu.io.read(feature_reduction_dir() + '/' + feature + '_cat_dict.pickle')
-        raw_data = raw_data.replace({feature: feat_dict})
-    return raw_data
-
-
 def reduce_features(raw_data, attack_cat):
     attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 1000)
     X, y = remove_target_columns(attack_cat_data)
@@ -237,7 +202,7 @@ def reduce_features_lasso(raw_data):
 
 
 def train_reduce_test(raw_data, kinds, cats, size):
-    #unused
+    # unused
     scores_pre = pd.DataFrame()
     scores_post = pd.DataFrame()
     optimal_params = {}

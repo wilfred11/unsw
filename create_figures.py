@@ -67,7 +67,8 @@ def pairplot(raw_data, attack_cat, size):
     https://www.datacamp.com/tutorial/tutorial-lasso-ridge-regression?utm_source=google&utm_medium=paid_search&utm_campaignid=19589720818&utm_adgroupid=157156373751&utm_device=c&utm_keyword=&utm_matchtype=&utm_network=g&utm_adpostion=&utm_creative=676354848902&utm_targetid=dsa-2218886984100&utm_loc_interest_ms=&utm_loc_physical_ms=1001071&utm_content=&utm_campaign=230119_1-sea~dsa~tofu_2-b2c_3-eu_4-prc_5-na_6-na_7-le_8-pdsh-go_9-na_10-na_11-na-oct23&gclid=CjwKCAjw7oeqBhBwEiwALyHLM6I2VIxuXzBANx3jIYuJcKTrj0bCip6PCFS0GDmdnnftoJCZyGrINBoC13MQAvD_BwE
     https://www.shedloadofcode.com/blog/eight-ways-to-perform-feature-selection-with-scikit-learn
     """
-    attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, size)
+
+    attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, True, no_cat_cols=True)
     # attack_cat_data.drop(['Label'], inplace=True, axis=1)
     attack_cat_data.drop(['attack_cat'], inplace=True, axis=1)
     cols = attack_cat_data.columns.to_list()
@@ -91,11 +92,12 @@ def my_umap(raw_data):
     # https://www.kaggle.com/code/btseytlin/interactive-visualization-with-umap-and-bokeh
     # https://datagy.io/matplotlib-3d-scatterplot/
     # https://datagy.io/python-seaborn-scatterplot/
-    attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, 'Normal', 5000)
+    #attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, 'Normal', 5000)
 
-    y_, uniques = pd.factorize(attack_cat_data.attack_cat, sort=True)
+    #y_, uniques = pd.factorize(attack_cat_data.attack_cat, sort=True)
+    y_, uniques = pd.factorize(raw_data.attack_cat, sort=True)
     y_uniques = np.unique(y_)
-    X = attack_cat_data.drop('Label', axis=1)
+    X = raw_data.drop('Label', axis=1)
     X = X.drop('attack_cat', axis=1)
     # print("y_:",y_)
     dict_num_to_attack_cat = dict(zip(y_uniques, uniques))
@@ -104,7 +106,7 @@ def my_umap(raw_data):
     y = [dict_num_to_attack_cat[fact] for fact in y_]
     ydf = pd.DataFrame({'y': y})
     # print(y)
-    manifold = umap.UMAP(n_neighbors=20, min_dist=0.75, n_components=2, metric='euclidean').fit(X, y_)
+    manifold = umap.UMAP(n_neighbors=40, min_dist=0.75, n_components=2, metric='euclidean').fit(X, y_)
     embedding = manifold.transform(X)
     tr_x, tr_y = embedding[:, 0], embedding[:, 1]
     print(embedding.shape)
