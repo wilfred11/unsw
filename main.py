@@ -100,12 +100,8 @@ elif execute == 2:
         print(raw_data.shape)
         print(raw_data.head(5))
         print(raw_data.columns)
-        # raw_data = raw_data.drop(raw_data[raw_data['attack_cat'] == 'Worms'].index)
-        # raw_data.columns.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var-cols.csv', index=False)
-        test_classifiers_basic(raw_data, ['dt'], 1000000)
+        test_classifiers_basic(raw_data, ['dt'], 10000, scoring=True, cm=True)
         # test_classifiers(raw_data, test, ['dt', 'svm'], 1000, ['Normal'], False)
-
-
 
 
 elif execute == 3:

@@ -5,23 +5,20 @@ import matplotlib.pyplot as plt
 import mpu
 from sklearn.linear_model import Lasso
 from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, ConfusionMatrixDisplay
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 from sklearn.tree import DecisionTreeClassifier
-from itertools import product
-from sklearn.feature_selection import SelectKBest, SelectPercentile, mutual_info_classif
-
 from functions import test_classifiers_dir, feature_reduction_dir, features_to_be_denominalized, external_data_dir
-from model_functions import classify, grid_search, reduce_features_rfecv, evaluate_model
+from model_functions import evaluate_model_scoring, grid_search, reduce_features_rfecv, evaluate_model_cm
 from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns, get_balanced_dataset
 
 
 # https://www.rasgoml.com/feature-engineering-tutorials/feature-selection-using-mutual-information-in-scikit-learn
 
 
-def test_classifiers_basic(raw_data, kinds, size):
+def test_classifiers_basic(raw_data, kinds, size, scoring, cm):
     # cats = list(raw_data.attack_cat.unique())
     # scores_pre = pd.DataFrame()
     scores_post = pd.DataFrame()
@@ -45,12 +42,12 @@ def test_classifiers_basic(raw_data, kinds, size):
         optimal_params[kind] = pd.concat([optimal_params[kind], params_indexed])
 
         clf_opt = get_classifier(kind, opt_params[0])
+        cv = StratifiedKFold(n_splits=10)
         print('scoring ' + kind)
-        scores_opt = classify(clf_opt, X, y)
-        print(y.value_counts())
-        evaluate_model(clf_opt, X, y)
-        #class_names = raw_data.attack_cat.unique()
-        #plot_confusion_matrix(predicted, actual, class_names, clf_opt)
+        if scoring:
+            scores_opt = evaluate_model_scoring(clf_opt, X, y, cv)
+        if cm:
+            evaluate_model_cm(clf_opt, X, y, cv)
 
         scores_opt = scores_opt.T
         scores_opt = scores_opt.set_index(
@@ -89,7 +86,7 @@ def test_classifiers(raw_data, test, kinds, size, cats, pre):
             clf = get_classifier(kind)
             if pre:
                 print('scoring ' + kind + ' ' + attack_cat)
-                scores = classify(clf, X, y)
+                scores = evaluate_model_scoring(clf, X, y)
                 scores = scores.T
                 scores = scores.set_index(
                     [pd.Series(attack_cat).repeat(len(scores)), pd.Series(kind).repeat(len(scores)),
@@ -105,7 +102,7 @@ def test_classifiers(raw_data, test, kinds, size, cats, pre):
 
             clf_opt = get_classifier(kind, opt_params[0])
             print('scoring ' + kind + ' ' + attack_cat)
-            scores_opt = classify(clf_opt, X, y)
+            scores_opt = evaluate_model_scoring(clf_opt, X, y)
             scores_opt = scores_opt.T
             scores_opt = scores_opt.set_index(
                 [pd.Series(attack_cat).repeat(len(scores_opt)), pd.Series(kind).repeat(len(scores_opt)),
