@@ -69,6 +69,7 @@ def cleanup_project_dirs():
     os.makedirs(figures_dir(), exist_ok=True)
     os.makedirs(data_dir(), exist_ok=True)
     os.makedirs(test_classifiers_dir(), exist_ok=True)
+    os.makedirs(test_classifiers_figs_dir(), exist_ok=True)
     os.makedirs(read_prepare_dir(), exist_ok=True)
     os.makedirs(read_prepare_figs_dir(), exist_ok=True)
     os.makedirs(feature_reduction_dir(), exist_ok=True)
@@ -97,6 +98,10 @@ def read_prepare_dir():
 
 def read_prepare_figs_dir():
     return read_prepare_dir() + '/figs'
+
+
+def test_classifiers_figs_dir():
+    return test_classifiers_dir() + '/figs'
 
 
 def feature_reduction_dir():

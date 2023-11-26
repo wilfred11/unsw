@@ -1,18 +1,20 @@
+# import itertools
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import mpu
 from sklearn.linear_model import Lasso
-from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
+from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, ConfusionMatrixDisplay
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 from sklearn.tree import DecisionTreeClassifier
+from itertools import product
 from sklearn.feature_selection import SelectKBest, SelectPercentile, mutual_info_classif
 
 from functions import test_classifiers_dir, feature_reduction_dir, features_to_be_denominalized, external_data_dir
-from model_functions import classify, grid_search, reduce_features_rfecv
+from model_functions import classify, grid_search, reduce_features_rfecv, evaluate_model
 from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns, get_balanced_dataset
 
 
@@ -21,7 +23,7 @@ from prepare_data import prepare_data_for_specific_attack_cat, remove_target_col
 
 def test_classifiers_basic(raw_data, kinds, size):
     # cats = list(raw_data.attack_cat.unique())
-    scores_pre = pd.DataFrame()
+    # scores_pre = pd.DataFrame()
     scores_post = pd.DataFrame()
     optimal_params = {}
     for kind in kinds:
@@ -29,7 +31,9 @@ def test_classifiers_basic(raw_data, kinds, size):
 
     print('**************************')
     balanced_data = get_balanced_dataset(raw_data, size)
-    X, y = remove_target_columns(balanced_data)
+    print('size bal. data', len(balanced_data))
+    print(balanced_data.attack_cat.value_counts())
+    X, y = remove_target_columns(balanced_data, multi=True)
 
     for kind in kinds:
         clf = get_classifier(kind)
@@ -43,6 +47,11 @@ def test_classifiers_basic(raw_data, kinds, size):
         clf_opt = get_classifier(kind, opt_params[0])
         print('scoring ' + kind)
         scores_opt = classify(clf_opt, X, y)
+        print(y.value_counts())
+        evaluate_model(clf_opt, X, y)
+        #class_names = raw_data.attack_cat.unique()
+        #plot_confusion_matrix(predicted, actual, class_names, clf_opt)
+
         scores_opt = scores_opt.T
         scores_opt = scores_opt.set_index(
             [pd.Series('Normal').repeat(len(scores_opt)), pd.Series(kind).repeat(len(scores_opt)),
@@ -53,8 +62,8 @@ def test_classifiers_basic(raw_data, kinds, size):
         optimal_params[kind].to_excel(test_classifiers_dir() + '/' + kind + '_params.xlsx')
         optimal_params[kind].to_pickle(test_classifiers_dir() + '/' + kind + '_params.pkl')
 
-    scores_pre.to_pickle(test_classifiers_dir() + '/' + 'clf_results_pre.pkl')
-    scores_pre.to_excel(test_classifiers_dir() + '/' + 'clf_results_pre.xlsx')
+    # scores_pre.to_pickle(test_classifiers_dir() + '/' + 'clf_results_pre.pkl')
+    # scores_pre.to_excel(test_classifiers_dir() + '/' + 'clf_results_pre.xlsx')
     scores_post.to_pickle(test_classifiers_dir() + '/' + 'clf_results_post.pkl')
     scores_post.to_excel(test_classifiers_dir() + '/' + 'clf_results_post.xlsx')
 
@@ -72,7 +81,8 @@ def test_classifiers(raw_data, test, kinds, size, cats, pre):
     print(optimal_params)
     for attack_cat in cats:
         print('**************************')
-        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, denominalize=False ,reduce_cats=False)
+        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, denominalize=False,
+                                                               reduce_cats=False)
 
         X, y = remove_target_columns(attack_cat_data)
         for kind in kinds:

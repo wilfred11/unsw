@@ -95,13 +95,15 @@ elif execute == 1:
 
 elif execute == 2:
     with keep.running() as k:
+        cleanup_project_dirs()
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
         print(raw_data.shape)
         print(raw_data.head(5))
         print(raw_data.columns)
-        #raw_data.columns.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var-cols.csv', index=False)
-        test_classifiers_basic(raw_data, ['dt', 'svm'],40000)
-        #test_classifiers(raw_data, test, ['dt', 'svm'], 1000, ['Normal'], False)
+        # raw_data = raw_data.drop(raw_data[raw_data['attack_cat'] == 'Worms'].index)
+        # raw_data.columns.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var-cols.csv', index=False)
+        test_classifiers_basic(raw_data, ['dt'], 1000000)
+        # test_classifiers(raw_data, test, ['dt', 'svm'], 1000, ['Normal'], False)
 
 
 
