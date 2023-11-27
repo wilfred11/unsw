@@ -18,7 +18,7 @@ test = False
 # execute=3 lasso
 
 
-execute = 2
+execute = 3
 
 sns.set_style("darkgrid")
 
@@ -100,13 +100,13 @@ elif execute == 2:
         print(raw_data.shape)
         print(raw_data.head(5))
         print(raw_data.columns)
-        test_classifiers_basic(raw_data, ['dt'], 10000, scoring=True, cm=True)
+        test_classifiers_basic(raw_data, ['dt'], 10000, scoring=False, cm=True)
         # test_classifiers(raw_data, test, ['dt', 'svm'], 1000, ['Normal'], False)
 
 
 elif execute == 3:
     with keep.running() as k:
-        raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom.csv')
+        raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
         print(raw_data.shape)
         print(raw_data.head(5))
 
