@@ -21,6 +21,7 @@ def evaluate_model_scoring(classifier, X, y, cv):
     scores = cross_validate(estimator=classifier, X=X, y=y, cv=cv,
                             scoring=scoring, n_jobs=-1)
     scores = pd.DataFrame(scores)
+
     # scores['test_F1'] = (2 * scores.test_precision * scores.test_recall) / (scores.test_precision + scores.test_recall)
     return scores
 
@@ -28,27 +29,35 @@ def evaluate_model_scoring(classifier, X, y, cv):
 def evaluate_model_cm(clf, X, y, cv):
     predicted_labels_accum = np.array([])
     actual_labels_accum = np.array([])
+    score = np.zeros(cv.get_n_splits([X, y]))
+    i = 0
     ca = np.zeros((y.nunique(), y.nunique()))
     for train_ix, test_ix in cv.split(X, y):
         train_x, test_x = X.loc[X.index[train_ix]], X.loc[X.index[test_ix]]
         train_y, test_y = y.loc[y.index[train_ix]], y.loc[y.index[test_ix]]
-        print(test_y.value_counts())
+        #print(test_y.value_counts())
         classifier = clf.fit(train_x, train_y)
         predicted_labels = classifier.predict(test_x)
         cm = confusion_matrix(test_y, predicted_labels)
         ca = np.add(ca, cm)
-
-        print('acc: ', accuracy_score(test_y, predicted_labels))
-        print('spec: ', accuracy_score(test_y, predicted_labels))
-
         predicted_labels_accum = np.append(predicted_labels_accum, predicted_labels)
         actual_labels_accum = np.append(actual_labels_accum, test_y)
+        score[i] = accuracy_score(test_y, predicted_labels)
+        i = i + 1
 
+    score_dict = dict(enumerate(score))
+
+    score_dict['metric'] = 'accuracy'
+    score_dict['type'] = 'balanced'
+    scores=pd.DataFrame(score_dict, index=[0])
+    scores.set_index(['type', 'metric'], inplace=True)
+    print(scores)
+    scores.to_excel(test_classifiers_dir() + '/' + 'cv_acc_score_.xlsx')
     print(classification_report(actual_labels_accum, predicted_labels_accum, target_names=clf.classes_))
     cr = classification_report(actual_labels_accum, predicted_labels_accum, target_names=clf.classes_, output_dict=True)
     cr_df = pd.DataFrame(cr).transpose()
     cr_df.to_excel(test_classifiers_dir() + '/' + 'clf_cr.xlsx')
-    #print(df)
+    # print(df)
     plt.grid(False)
     plt.figure(figsize=(15, 15))
     ax = plt.subplot(1, 1, 1)
