@@ -1,6 +1,7 @@
+import numpy as np
 import seaborn as sns
 import pandas as pd
-#import umap.umap_ as umap
+import umap.umap_ as umap
 #import umap.plot as umap_plot
 
 from matplotlib import pyplot as plt
@@ -94,7 +95,7 @@ def my_umap(raw_data):
     #attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, 'Normal', 5000)
 
     #y_, uniques = pd.factorize(attack_cat_data.attack_cat, sort=True)
-    """y_, uniques = pd.factorize(raw_data.attack_cat, sort=True)
+    y_, uniques = pd.factorize(raw_data.attack_cat, sort=True)
     y_uniques = np.unique(y_)
     X = raw_data.drop('Label', axis=1)
     X = X.drop('attack_cat', axis=1)
@@ -115,5 +116,4 @@ def my_umap(raw_data):
     plt.axis('off')
     plt.legend(title='Categories', loc='upper left', labels=uniques)
     plt.gca().set_aspect('equal', 'datalim')
-    plt.title('UMAP projection of unsw-dataset', fontsize=12)
-    plt.show()"""
+    plt.title()

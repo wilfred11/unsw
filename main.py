@@ -13,12 +13,13 @@ from project import test_classifiers, reduce_features_lasso, train_reduce_test, 
 from wakepy import keep
 
 test = False
-# execute=1: read data, handle categorical data, standardize data, denominalize data, correlated features, save prepared data
-# execute=2 test classifiers
-# execute=3 lasso
+# execute=1: read data, handle categorical data, standardize data, denominalize data, low variance columns, save prepared data
+# execute=2 test model cv balanced
+# execute=3 correlated, remove features, save adapted dataset
+# execute=4 lasso, remove features, save adapted dataset
 
 
-execute = 3
+execute = 4
 
 sns.set_style("darkgrid")
 
@@ -107,57 +108,75 @@ elif execute == 2:
 elif execute == 3:
     with keep.running() as k:
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
+
+        attack_cat = raw_data.attack_cat.copy()
+        Label = raw_data.Label.copy()
+        raw_data = raw_data.drop('attack_cat', axis=1)
+        raw_data = raw_data.drop('Label', axis=1)
+
+        correlated_features(raw_data)
+
+        raw_data['attack_cat'] = attack_cat
+        raw_data['Label'] = Label
+
+        #raw_data = raw_data.drop('Stime', axis=1)
+        #raw_data = raw_data.drop('Ltime', axis=1)
+        #raw_data = raw_data.drop('dloss', axis=1)
+        #raw_data = raw_data.drop('Dpkts', axis=1)
+        #raw_data = raw_data.drop('swin', axis=1)
+        raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
+
+
+elif execute == 4:
+    with keep.running() as k:
+        raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
         print(raw_data.shape)
         print(raw_data.head(5))
-
-        proto = raw_data.proto.copy()
-        service = raw_data.service.copy()
-        state = raw_data.state.copy()
+        #proto = raw_data.proto.copy()
+        #service = raw_data.service.copy()
+        #state = raw_data.state.copy()
         is_ftp_login = raw_data.is_ftp_login.copy()
         is_sm_ips_ports = raw_data.is_sm_ips_ports.copy()
-        raw_data = raw_data.drop('proto', axis=1)
-        raw_data = raw_data.drop('service', axis=1)
-        raw_data = raw_data.drop('state', axis=1)
+        #raw_data = raw_data.drop('proto', axis=1)
+        #raw_data = raw_data.drop('service', axis=1)
+        #raw_data = raw_data.drop('state', axis=1)
         raw_data = raw_data.drop('is_sm_ips_ports', axis=1)
         raw_data = raw_data.drop('is_ftp_login', axis=1)
 
-        pairplot(raw_data, 'Normal', 1000)
+        pairplot(raw_data, 'Normal', 1000000)
 
         print('afte pp')
         print(raw_data.shape)
         print(raw_data.head(5))
 
-        raw_data['service'] = service
-        raw_data['proto'] = proto
-        raw_data['state'] = state
+        #raw_data['service'] = service
+        #raw_data['proto'] = proto
+        #raw_data['state'] = state
         raw_data['is_ftp_login'] = is_ftp_login
         raw_data['is_sm_ips_ports'] = is_sm_ips_ports
         print(raw_data.shape)
         print(raw_data.head(5))
-        # cats = raw_data.attack_cat.unique().to_list()
-        cats = ['Normal']
 
-        test_classifiers(raw_data, test, ['dt', 'svm'], 1000, cats, False)
-
-        # handle_categorical_data(raw_data)
-        # raw_data = reduce_categories(raw_data)
+        reduce_features_lasso(raw_data)
 
 
-elif execute == 4:
+
+
+elif execute == 5:
     with keep.running() as k:
-        raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared_.csv', index_col=0)
+        raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
         print(raw_data.shape)
         print(raw_data.head())
         # raw_data.head().to_csv(external_data_dir() + '/' + 'raw_data_prepared1.csv', index=False)
         reduce_features_lasso(raw_data)
 
-elif execute == 5:
+elif execute == 6:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=0)
         train_reduce_test(raw_data, ['svm'], ['Normal'], 100000)
 
 
-elif execute == 6:
+elif execute == 7:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_std.csv')
         print(raw_data.head())
@@ -166,3 +185,13 @@ elif execute == 6:
         raw_data = reduce_categories(raw_data)
         raw_data = denominalize(raw_data)
         my_umap(raw_data)
+
+
+else:
+    # cats = raw_data.attack_cat.unique().to_list()
+    # cats = ['Normal']
+
+    # test_classifiers(raw_data, test, ['dt', 'svm'], 1000, cats, False)
+
+    # handle_categorical_data(raw_data)
+    # raw_data = reduce_categories(raw_data)
