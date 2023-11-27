@@ -46,14 +46,14 @@ def test_classifiers_basic(raw_data, kinds, size, scoring, cm):
         print('scoring ' + kind)
         if scoring:
             scores_opt = evaluate_model_scoring(clf_opt, X, y, cv)
+            scores_opt = scores_opt.T
+            scores_opt = scores_opt.set_index(
+                [pd.Series('Normal').repeat(len(scores_opt)), pd.Series(kind).repeat(len(scores_opt)),
+                 scores_opt.index.to_series()])
+            scores_post = pd.concat([scores_post, scores_opt])
+
         if cm:
             evaluate_model_cm(clf_opt, X, y, cv)
-
-        scores_opt = scores_opt.T
-        scores_opt = scores_opt.set_index(
-            [pd.Series('Normal').repeat(len(scores_opt)), pd.Series(kind).repeat(len(scores_opt)),
-             scores_opt.index.to_series()])
-        scores_post = pd.concat([scores_post, scores_opt])
 
     for kind in kinds:
         optimal_params[kind].to_excel(test_classifiers_dir() + '/' + kind + '_params.xlsx')
