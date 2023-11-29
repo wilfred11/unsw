@@ -90,6 +90,8 @@ elif execute == 2:
     with keep.running() as k:
         cleanup_project_dirs()
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
+        raw_data = raw_data.drop('index', axis=1)
+        raw_data.reset_index(drop=True, inplace=True)
         print(raw_data.shape)
         print(raw_data.head(5))
         print(raw_data.columns)
@@ -104,16 +106,9 @@ elif execute == 3:
         raw_data = raw_data.drop('Label', axis=1)
         correlated_features(raw_data)
 
-
 elif execute == 4:
     with keep.running() as k:
-        #https://tahera-firdose.medium.com/lasso-regression-a-comprehensive-guide-to-feature-selection-and-regularization-2c6a20b61e23
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
-        raw_data = raw_data.drop('Stime', axis=1)
-        raw_data = raw_data.drop('Ltime', axis=1)
-        raw_data = raw_data.drop('dloss', axis=1)
-        raw_data = raw_data.drop('Dpkts', axis=1)
-        raw_data = raw_data.drop('swin', axis=1)
         raw_data = raw_data.drop('index', axis=1)
         raw_data.reset_index(drop=True, inplace=True)
         print(raw_data.columns)
@@ -131,15 +126,19 @@ elif execute == 4:
 
         pairplot(raw_data_numeric, 'Normal', 2500)
 
-        print('afte pp')
-        print(raw_data.shape)
-        print(raw_data.head(5))
-        raw_data = pd.concat([raw_data_bool, raw_data_numeric],  axis=1)
-        reduce_features_lasso_balanced(raw_data)
-
-
 
 elif execute == 5:
+    with keep.running() as k:
+        #https://tahera-firdose.medium.com/lasso-regression-a-comprehensive-guide-to-feature-selection-and-regularization-2c6a20b61e23
+        raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
+        raw_data = raw_data.drop('index', axis=1)
+        raw_data.reset_index(drop=True, inplace=True)
+        print(raw_data.columns)
+        raw_data.is_ftp_login = raw_data.is_ftp_login.astype('bool')
+        raw_data.is_sm_ips_ports = raw_data.is_sm_ips_ports.astype('bool')
+        reduce_features_lasso_balanced(raw_data)
+
+elif execute == 6:
     with keep.running() as k:
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
         #raw_data = raw_data.drop('Stime', axis=1)
@@ -150,13 +149,13 @@ elif execute == 5:
         #raw_data = raw_data.drop('Spkts', axis=1)
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
-elif execute == 6:
+elif execute == 7:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=0)
         train_reduce_test(raw_data, ['svm'], ['Normal'], 100000)
 
 
-elif execute == 7:
+elif execute == 8:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_std.csv')
         print(raw_data.head())
