@@ -68,12 +68,12 @@ def pairplot(raw_data, attack_cat, size):
     https://www.shedloadofcode.com/blog/eight-ways-to-perform-feature-selection-with-scikit-learn
     """
 
-    attack_cat_data = get_balanced_dataset(raw_data,  size)
-    attack_cat_data.drop(['Label'], inplace=True, axis=1)
-    attack_cat_data.drop(['attack_cat'], inplace=True, axis=1)
-    cols = attack_cat_data.columns.to_list()
-    print(range(ceil(len(attack_cat_data.columns) / 4)))
-    for i in range(ceil(len(attack_cat_data.columns) / 4)):
+    b_raw_data = get_balanced_dataset(raw_data,  size)
+    b_raw_data.drop(['Label'], inplace=True, axis=1)
+    b_raw_data.drop(['attack_cat'], inplace=True, axis=1)
+    cols = b_raw_data.columns.to_list()
+    print(range(ceil(len(b_raw_data.columns) / 4)))
+    for i in range(ceil(len(b_raw_data.columns) / 4)):
         if len(cols) == 5:
             cols_to_be_shown = cols[:5]
         elif len(cols) >= 4:
@@ -84,7 +84,7 @@ def pairplot(raw_data, attack_cat, size):
             return
 
         cols = [item for item in cols if item not in cols_to_be_shown]
-        sns.pairplot(attack_cat_data[cols_to_be_shown])
+        sns.pairplot(b_raw_data[cols_to_be_shown])
         plt.savefig(feature_reduction_dir() + '/figs/columns_pairplot_' + str(i) + '.png')
 
 
