@@ -114,8 +114,7 @@ def remove_low_variance_columns(raw_data):
     return raw_data
 
 
-def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_other_attacks=True, reduce_cats=False,
-                                         denominalize=False):
+def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_other_attacks=True):
     raw_data_tmp = raw_data.copy()
     number_of_attack_cat = 0
     number_of_normal = 0
@@ -151,11 +150,6 @@ def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_oth
 
     X_complete = pd.concat([X_attack_max, X_normal_max])
     print(X_complete.head())
-    if reduce_cats:
-        handle_categorical_data(X_complete)
-        X_complete = reduce_categories(X_complete)
-    if denominalize:
-        X_complete = denominalize(X_complete)
 
     raw_data_tmp = None
     return X_complete

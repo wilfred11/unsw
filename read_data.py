@@ -12,6 +12,8 @@ def clean_data(raw_data):
     raw_data['attack_cat'] = raw_data['attack_cat'].replace(np.nan, 'Normal')
     raw_data['attack_cat'] = raw_data['attack_cat'].str.strip()
     raw_data['attack_cat'] = raw_data['attack_cat'].replace('Backdoor', 'Backdoors')
+    raw_data.is_ftp_login = raw_data.is_ftp_login.astype('bool')
+    raw_data.is_sm_ips_ports = raw_data.is_sm_ips_ports.astype('bool')
     # for feat in irrelevant_features():
     #    raw_data.drop(feat, axis=1, inplace=True)
     return raw_data

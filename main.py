@@ -9,7 +9,8 @@ from read_data import read_data, info
 from inspect_data import numeric_feature_inspection, inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize, min_max, handle_categorical_data, reduce_categories, \
     prepare_data_for_umap, get_balanced_dataset, remove_low_variance_columns
-from project import test_classifiers, reduce_features_lasso, train_reduce_test, test_classifiers_basic
+from project import test_classifiers, reduce_features_lasso, train_reduce_test, test_classifiers_basic, \
+    reduce_features_lasso_balanced
 from wakepy import keep
 
 test = False
@@ -129,36 +130,34 @@ elif execute == 3:
 
 elif execute == 4:
     with keep.running() as k:
+        #https://tahera-firdose.medium.com/lasso-regression-a-comprehensive-guide-to-feature-selection-and-regularization-2c6a20b61e23
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
+        raw_data = raw_data.drop('Stime', axis=1)
+        raw_data = raw_data.drop('Ltime', axis=1)
+        raw_data = raw_data.drop('dloss', axis=1)
+        raw_data = raw_data.drop('Dpkts', axis=1)
+        raw_data = raw_data.drop('swin', axis=1)
+        raw_data = raw_data.drop('index', axis=1)
+        print(raw_data.columns)
+        raw_data.is_ftp_login = raw_data.is_ftp_login.astype('bool')
+        raw_data.is_sm_ips_ports = raw_data.is_sm_ips_ports.astype('bool')
+
+        raw_data_bool = raw_data.select_dtypes(include='bool')
+        raw_data_numeric = raw_data.select_dtypes(exclude='bool')
+
+        result = raw_data.dtypes
+        pd.set_option("display.max_rows", 70)
+        print(result)
         print(raw_data.shape)
         print(raw_data.head(5))
-        #proto = raw_data.proto.copy()
-        #service = raw_data.service.copy()
-        #state = raw_data.state.copy()
-        is_ftp_login = raw_data.is_ftp_login.copy()
-        is_sm_ips_ports = raw_data.is_sm_ips_ports.copy()
-        #raw_data = raw_data.drop('proto', axis=1)
-        #raw_data = raw_data.drop('service', axis=1)
-        #raw_data = raw_data.drop('state', axis=1)
-        raw_data = raw_data.drop('is_sm_ips_ports', axis=1)
-        raw_data = raw_data.drop('is_ftp_login', axis=1)
 
-        pairplot(raw_data, 'Normal', 1000000)
+        pairplot(raw_data_numeric, 'Normal', 250000)
 
         print('afte pp')
         print(raw_data.shape)
         print(raw_data.head(5))
-
-        #raw_data['service'] = service
-        #raw_data['proto'] = proto
-        #raw_data['state'] = state
-        raw_data['is_ftp_login'] = is_ftp_login
-        raw_data['is_sm_ips_ports'] = is_sm_ips_ports
-        print(raw_data.shape)
-        print(raw_data.head(5))
-
-        reduce_features_lasso(raw_data)
-
+        raw_data = pd.concat([raw_data_bool, raw_data_numeric],  axis=1)
+        reduce_features_lasso_balanced(raw_data)
 
 
 
@@ -188,6 +187,7 @@ elif execute == 7:
 
 
 else:
+    pass
     # cats = raw_data.attack_cat.unique().to_list()
     # cats = ['Normal']
 

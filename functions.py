@@ -96,6 +96,14 @@ def read_prepare_dir():
     return data_dir() + '/read_prepare'
 
 
+def lasso_dir():
+    return data_dir() + '/lasso'
+
+
+def lasso_figs_dir():
+    return lasso_dir() + '/figs'
+
+
 def read_prepare_figs_dir():
     return read_prepare_dir() + '/figs'
 

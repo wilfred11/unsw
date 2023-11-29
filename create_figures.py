@@ -6,7 +6,7 @@ import umap.umap_ as umap
 
 from matplotlib import pyplot as plt
 from functions import test_classifiers_dir, figures_dir, feature_reduction_dir, external_data_dir
-from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns
+from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns, get_balanced_dataset
 from math import ceil
 
 
@@ -68,8 +68,8 @@ def pairplot(raw_data, attack_cat, size):
     https://www.shedloadofcode.com/blog/eight-ways-to-perform-feature-selection-with-scikit-learn
     """
 
-    attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, True, no_cat_cols=True)
-    # attack_cat_data.drop(['Label'], inplace=True, axis=1)
+    attack_cat_data = get_balanced_dataset(raw_data,  size)
+    attack_cat_data.drop(['Label'], inplace=True, axis=1)
     attack_cat_data.drop(['attack_cat'], inplace=True, axis=1)
     cols = attack_cat_data.columns.to_list()
     print(range(ceil(len(attack_cat_data.columns) / 4)))
