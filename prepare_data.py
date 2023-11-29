@@ -52,11 +52,6 @@ def denominalize(raw_data):
     return raw_data
 
 
-def filter_on_attack_cat(raw_data, attack_cat="Normal"):
-    result = raw_data[raw_data['attack_cat'] == attack_cat]
-    return result
-
-
 def prepare_data_for_umap(raw_data):
     raw_data_tmp = raw_data.copy()
     normal = raw_data_tmp[raw_data_tmp['attack_cat'] == "Normal"]

@@ -1,17 +1,15 @@
+import mpu
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from numpy.random import randint
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score, classification_report
 # from probatus.feature_elimination import ShapRFECV
-from sklearn.model_selection import cross_validate, StratifiedKFold, KFold, StratifiedGroupKFold, \
-    StratifiedShuffleSplit, RepeatedKFold, RepeatedStratifiedKFold
+from sklearn.model_selection import cross_validate, StratifiedKFold
 from sklearn.model_selection import GridSearchCV
 # from probatus.feature_elimination import ShapRFECV
 from sklearn.feature_selection import RFECV
-from sklearn.feature_selection import SelectKBest, chi2
-
-from functions import test_classifiers_dir, test_classifiers_figs_dir, external_data_dir
+from functions import test_classifiers_dir, test_classifiers_figs_dir, external_data_dir, feature_reduction_dir
 
 
 # Todo https://machinelearningmastery.com/smote-oversampling-for-imbalanced-classification/
@@ -68,6 +66,7 @@ def evaluate_model_cm(clf, X, y, cv):
     # plt.grid(False)
     # plt.show()
     plt.savefig(test_classifiers_figs_dir() + '/' + str(y.nunique()) + '-class-confusion-map.png')
+    mpu.io.write(feature_reduction_dir() + '/' + 'conf-mat-agg.pickle', ca)
 
 
 def grid_search(classifier, param_grid, X, y):

@@ -7,7 +7,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from numpy import unique
 from numpy import where
-from sklearn.datasets import make_classification
 from sklearn.cluster import Birch
 from matplotlib import pyplot, pyplot as plt
 from functions import numeric_features, data_dir, read_prepare_dir, external_data_dir, read_prepare_figs_dir

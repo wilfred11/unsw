@@ -1,10 +1,8 @@
 import pandas as pd
 import seaborn as sns
 from pandas import read_csv
-
 from create_figures import create_results_plot_all, correlated_features, pairplot, my_umap
-from functions import unsw_data, cleanup_project_dirs, external_data_dir, feature_reduction_dir, numeric_features, \
-    read_prepare_dir, read_prepare_figs_dir
+from functions import unsw_data, cleanup_project_dirs, external_data_dir
 from read_data import read_data, info
 from inspect_data import numeric_feature_inspection, inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize, min_max, handle_categorical_data, reduce_categories, \
