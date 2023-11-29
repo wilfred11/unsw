@@ -9,7 +9,7 @@ from read_data import read_data, info
 from inspect_data import numeric_feature_inspection, inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize, min_max, handle_categorical_data, reduce_categories, \
     prepare_data_for_umap, get_balanced_dataset, remove_low_variance_columns
-from project import test_classifiers, reduce_features_lasso, train_reduce_test, test_classifiers_basic, \
+from project import test_classifiers, train_reduce_test, test_classifiers_basic, \
     reduce_features_lasso_balanced
 from wakepy import keep
 
@@ -20,7 +20,7 @@ test = False
 # execute=4 lasso, remove features, save adapted dataset
 
 
-execute = 4
+execute = 2
 
 sns.set_style("darkgrid")
 
@@ -78,16 +78,7 @@ elif execute == 1:
         print(raw_data.shape)
         print(raw_data.head())
 
-        attack_cat = raw_data.attack_cat.copy()
-        Label = raw_data.Label.copy()
-        raw_data = raw_data.drop('attack_cat', axis=1)
-        raw_data = raw_data.drop('Label', axis=1)
 
-        # correlated_features(raw_data)
-
-        raw_data['attack_cat'] = attack_cat
-        raw_data['Label'] = Label
-        print(raw_data.shape)
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
         # create_results_plot_all()
@@ -102,30 +93,16 @@ elif execute == 2:
         print(raw_data.shape)
         print(raw_data.head(5))
         print(raw_data.columns)
-        test_classifiers_basic(raw_data, ['dt'], 10000, scoring=False, cm=True)
+        test_classifiers_basic(raw_data, ['dt'], 2000000, scoring=False, cm=True)
         # test_classifiers(raw_data, test, ['dt', 'svm'], 1000, ['Normal'], False)
 
 
 elif execute == 3:
     with keep.running() as k:
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
-
-        attack_cat = raw_data.attack_cat.copy()
-        Label = raw_data.Label.copy()
         raw_data = raw_data.drop('attack_cat', axis=1)
         raw_data = raw_data.drop('Label', axis=1)
-
         correlated_features(raw_data)
-
-        raw_data['attack_cat'] = attack_cat
-        raw_data['Label'] = Label
-
-        #raw_data = raw_data.drop('Stime', axis=1)
-        #raw_data = raw_data.drop('Ltime', axis=1)
-        #raw_data = raw_data.drop('dloss', axis=1)
-        #raw_data = raw_data.drop('Dpkts', axis=1)
-        #raw_data = raw_data.drop('swin', axis=1)
-        raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
 
 elif execute == 4:
@@ -138,6 +115,7 @@ elif execute == 4:
         raw_data = raw_data.drop('Dpkts', axis=1)
         raw_data = raw_data.drop('swin', axis=1)
         raw_data = raw_data.drop('index', axis=1)
+        raw_data.reset_index(drop=True, inplace=True)
         print(raw_data.columns)
         raw_data.is_ftp_login = raw_data.is_ftp_login.astype('bool')
         raw_data.is_sm_ips_ports = raw_data.is_sm_ips_ports.astype('bool')
@@ -151,7 +129,7 @@ elif execute == 4:
         print(raw_data.shape)
         print(raw_data.head(5))
 
-        pairplot(raw_data_numeric, 'Normal', 250000)
+        pairplot(raw_data_numeric, 'Normal', 2500)
 
         print('afte pp')
         print(raw_data.shape)
@@ -164,10 +142,13 @@ elif execute == 4:
 elif execute == 5:
     with keep.running() as k:
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
-        print(raw_data.shape)
-        print(raw_data.head())
-        # raw_data.head().to_csv(external_data_dir() + '/' + 'raw_data_prepared1.csv', index=False)
-        reduce_features_lasso(raw_data)
+        #raw_data = raw_data.drop('Stime', axis=1)
+        #raw_data = raw_data.drop('Ltime', axis=1)
+        #raw_data = raw_data.drop('dloss', axis=1)
+        #raw_data = raw_data.drop('Dpkts', axis=1)
+        #raw_data = raw_data.drop('swin', axis=1)
+        #raw_data = raw_data.drop('Spkts', axis=1)
+        raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
 elif execute == 6:
     with keep.running() as k:
