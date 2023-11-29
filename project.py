@@ -214,11 +214,13 @@ def reduce_features_lasso_balanced(raw_data):
     print('features to be removed:', unselected_features)
     nonzero_coefs = lasso.coef_[selected_indices]
     # Plot the feature coefficients
-    plt.figure(figsize=(70, 100))
+    plt.figure(figsize=(70, 120))
     plt.barh(range(len(nonzero_coefs)), nonzero_coefs, tick_label=selected_features)
-    plt.xlabel('Coefficient values')
-    plt.ylabel('Features')
-    plt.title('Non zero feature Coefficients')
+    plt.xlabel('Coefficient values',  fontsize=45)
+    plt.yticks(fontsize=40)
+    plt.xticks(fontsize=40)
+    plt.ylabel('Features', fontsize=45)
+    plt.title('Non zero feature Coefficients', fontsize=45)
     # plt.show()
     plt.savefig(feature_reduction_dir() + '/figs/feature-coef.png')
 
