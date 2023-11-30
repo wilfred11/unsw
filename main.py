@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 from pandas import read_csv
 from create_figures import create_results_plot_all, correlated_features, pairplot, my_umap
-from functions import unsw_data, cleanup_project_dirs, external_data_dir, unsw_prepared_traindata
+from functions import unsw_data, cleanup_project_dirs, external_data_dir, unsw_prepared_traindata, dataset_dir
 from read_data import read_data, info, read_prepared_data
 from inspect_data import numeric_feature_inspection, inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize, min_max, handle_categorical_data, reduce_categories, \
@@ -18,9 +18,10 @@ test = False
 # execute=4 lasso, remove features, save adapted dataset
 
 
-execute = 4
+execute = 0
 
 sns.set_style("darkgrid")
+
 
 if execute == 12:
     with keep.running() as k:
@@ -44,6 +45,31 @@ if execute == 12:
         # n_neighbors=optimize_lof_parameters(raw_data)
 
         # outliers(raw_data, n_neighbors)
+
+elif execute == 0:
+    with keep.running() as k:
+        cleanup_project_dirs()
+        raw_data = pd.DataFrame()
+        #raw_data = read_data(unsw_data, test)
+        raw_data = read_prepared_data(unsw_prepared_traindata())
+        print(raw_data.columns)
+        print(raw_data.shape)
+
+        column_names = pd.read_csv(dataset_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
+        column_names['Name'] = column_names['Name'].str.strip()
+        column_names['Name'] = column_names['Name'].str.lower()
+        cnm = raw_data.columns.to_list()
+        t = column_names.Name.to_list()
+        print(cnm)
+        print(t)
+        temp3 = []
+        for element in t:
+            if element not in cnm:
+                temp3.append(element)
+        print(temp3)
+        #cnm.compare(t)
+        #print(cnm.compare(t, align_axis=1))
+        #column_names.set_index('Locality', inplace=True)
 
 elif execute == 1:
     with keep.running() as k:

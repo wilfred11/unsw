@@ -44,12 +44,12 @@ def read_prepared_data(unsw_prepared_data):
     print("reading data")
     raw_data_list = []
 
-    for filename in unsw_prepared_data():
-        raw_data_part = pd.read_csv(dataset_dir() + "/" + filename, sep=",", header=True,
+    for filename in unsw_prepared_data:
+        raw_data_part = pd.read_csv(dataset_dir() + "/" + filename, sep=",", header=0,
                                     dtype={'sport': 'string', 'dsport': 'string', 'attack_cat': 'string'},
                                     converters={'ct_ftp_cmd': empty_string_to_nan, 'is_ftp_login': empty_string_to_nan,
                                                 'ct_flw_http_mthd': empty_string_to_nan},
-                                    encoding='ISO-8859-1')
+                                    encoding='utf8')
         raw_data_list.append(raw_data_part)
 
     raw_data = pd.concat(raw_data_list)
