@@ -22,7 +22,7 @@ execute = 2
 
 sns.set_style("darkgrid")
 
-if execute == 6:
+if execute == 12:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=None)
 
@@ -93,7 +93,7 @@ elif execute == 2:
         print(raw_data.shape)
         print(raw_data.head(5))
         print(raw_data.columns)
-        test_classifiers_basic(raw_data, ['dt'], 2000000, scoring=False, cm=True)
+        test_classifiers_basic(raw_data, ['dt'], 2000000, scoring=False, cm=True, cm_name='conf-mat-agg_1')
         # test_classifiers(raw_data, test, ['dt', 'svm'], 1000, ['Normal'], False)
 
 
@@ -139,12 +139,12 @@ elif execute == 5:
 elif execute == 6:
     with keep.running() as k:
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
-        #raw_data = raw_data.drop('Stime', axis=1)
-        #raw_data = raw_data.drop('Ltime', axis=1)
-        #raw_data = raw_data.drop('dloss', axis=1)
-        #raw_data = raw_data.drop('Dpkts', axis=1)
-        #raw_data = raw_data.drop('swin', axis=1)
-        #raw_data = raw_data.drop('Spkts', axis=1)
+        raw_data = raw_data.drop('Stime', axis=1)
+        raw_data = raw_data.drop('Ltime', axis=1)
+        raw_data = raw_data.drop('dloss', axis=1)
+        raw_data = raw_data.drop('Dpkts', axis=1)
+        raw_data = raw_data.drop('swin', axis=1)
+        raw_data = raw_data.drop('Spkts', axis=1)
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
 elif execute == 7:

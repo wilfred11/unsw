@@ -18,7 +18,7 @@ from prepare_data import prepare_data_for_specific_attack_cat, remove_target_col
 # https://www.rasgoml.com/feature-engineering-tutorials/feature-selection-using-mutual-information-in-scikit-learn
 
 
-def test_classifiers_basic(raw_data, kinds, size, scoring, cm):
+def test_classifiers_basic(raw_data, kinds, size, scoring, cm, cm_name='conf-mat-agg'):
     # cats = list(raw_data.attack_cat.unique())
     # scores_pre = pd.DataFrame()
     scores_post = pd.DataFrame()
@@ -53,7 +53,7 @@ def test_classifiers_basic(raw_data, kinds, size, scoring, cm):
             scores_post = pd.concat([scores_post, scores_opt])
 
         if cm:
-            evaluate_model_cm(clf_opt, X, y, cv)
+            evaluate_model_cm(clf_opt, X, y, cv, cm_name)
 
     for kind in kinds:
         optimal_params[kind].to_excel(test_classifiers_dir() + '/' + kind + '_params.xlsx')

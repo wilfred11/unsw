@@ -24,7 +24,7 @@ def evaluate_model_scoring(classifier, X, y, cv):
     return scores
 
 
-def evaluate_model_cm(clf, X, y, cv):
+def evaluate_model_cm(clf, X, y, cv, cm_name='conf-mat-agg'):
     predicted_labels_accum = np.array([])
     actual_labels_accum = np.array([])
     score = np.zeros(cv.get_n_splits([X, y]))
@@ -66,7 +66,7 @@ def evaluate_model_cm(clf, X, y, cv):
     # plt.grid(False)
     # plt.show()
     plt.savefig(test_classifiers_figs_dir() + '/' + str(y.nunique()) + '-class-confusion-map.png')
-    mpu.io.write(feature_reduction_dir() + '/' + 'conf-mat-agg.pickle', ca)
+    mpu.io.write(external_data_dir() + '/' + cm_name+'.pickle', ca)
 
 
 def grid_search(classifier, param_grid, X, y):

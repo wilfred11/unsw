@@ -9,7 +9,8 @@ from numpy import unique
 from numpy import where
 from sklearn.cluster import Birch
 from matplotlib import pyplot, pyplot as plt
-from functions import numeric_features, data_dir, read_prepare_dir, external_data_dir, read_prepare_figs_dir
+from functions import numeric_features, data_dir, read_prepare_dir, external_data_dir, read_prepare_figs_dir, \
+    dataset_dir
 
 
 def crosstab_service_to_attack_cat(raw_data):
@@ -116,7 +117,7 @@ def feature_props(column_values, column_props_global, column_name, column_descri
 def numeric_feature_inspection(raw_data):
     # https://www.kaggle.com/code/khairulislam/unsw-nb15-eda
     column_props = pd.DataFrame()
-    columns_info = pd.read_csv(external_data_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
+    columns_info = pd.read_csv(dataset_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
     columns_info['Name'] = columns_info['Name'].str.strip()
     name_desc_dict = dict(zip(columns_info.Name, columns_info.Description))
 

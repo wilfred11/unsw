@@ -80,6 +80,10 @@ def external_data_dir():
     return '../unsw_external_data'
 
 
+def dataset_dir():
+    return external_data_dir() + '/dataset'
+
+
 def data_dir():
     return external_data_dir() + '/generated_data'
 

@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from functions import empty_string_to_nan, irrelevant_features, external_data_dir, figures_dir, data_dir, \
-    read_prepare_dir
+    read_prepare_dir, dataset_dir
 
 
 def clean_data(raw_data):
@@ -43,11 +43,11 @@ def info(raw_data):
 def read_data(unsw_data, test):
     print("reading data")
     raw_data_list = []
-    column_names = pd.read_csv(external_data_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
+    column_names = pd.read_csv(dataset_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
     column_names['Name'] = column_names['Name'].str.strip()
 
     for filename in unsw_data(test):
-        raw_data_part = pd.read_csv(external_data_dir() + "/" + filename, sep=",", header=None,
+        raw_data_part = pd.read_csv(dataset_dir() + "/" + filename, sep=",", header=None,
                                     names=column_names['Name'],
                                     dtype={'sport': 'string', 'dsport': 'string', 'attack_cat': 'string'},
                                     converters={'ct_ftp_cmd': empty_string_to_nan, 'is_ftp_login': empty_string_to_nan,
