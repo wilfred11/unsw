@@ -43,10 +43,10 @@ def correlated_features(raw_data):
     features_corr = pd.DataFrame({'column': [], 'other_column': [], 'correlation': []})
     corr_mat = raw_data.corr(method='pearson')
     plt.figure(figsize=(20, 20))
-    sns.heatmap(corr_mat, square=True, annot=True, annot_kws={'fontsize': 6}, fmt='.2f')
+    sns.heatmap(corr_mat, square=True, annot=True, annot_kws={'fontsize': 6}, fmt='.2f', cbar=False)
     plt.savefig(feature_reduction_dir() + "/figs/feature_heatmap_hidpi.png", dpi=200)
-
     columns = corr_mat.columns
+
     corr_mat.to_pickle(feature_reduction_dir() + "/feature_corrs.pkl")
     for i in range(corr_mat.shape[0]):
         for j in range(i + 1, corr_mat.shape[0]):

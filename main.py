@@ -18,7 +18,7 @@ test = False
 # execute=4 lasso, remove features, save adapted dataset
 
 
-execute = 2
+execute = 3
 
 sns.set_style("darkgrid")
 
@@ -93,18 +93,29 @@ elif execute == 2:
         print(raw_data.shape)
         print(raw_data.head(5))
         print(raw_data.columns)
-        test_classifiers_basic(raw_data, ['dt'], 2000000, scoring=False, cm=True, cm_name='conf-mat-agg_1')
-        # test_classifiers(raw_data, test, ['dt', 'svm'], 1000, ['Normal'], False)
-
+        test_classifiers_basic(raw_data, ['dt'], 5000, scoring=False, cm=True, cm_name='conf-mat-agg_1')
 
 elif execute == 3:
     with keep.running() as k:
+        cleanup_project_dirs()
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
+        raw_data = raw_data.drop('index', axis=1)
+        raw_data.reset_index(drop=True, inplace=True)
+        print(raw_data.shape)
+        print(raw_data.head(5))
+        print(raw_data.columns)
+        test_classifiers_basic(raw_data, ['dt', 'svm', 'knn'], 5000, scoring=True, cm=False, cm_name='conf-mat-agg')
+
+elif execute == 4:
+    with keep.running() as k:
+        raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
+        raw_data = raw_data.drop('index', axis=1)
+        raw_data.reset_index(drop=True, inplace=True)
         raw_data = raw_data.drop('attack_cat', axis=1)
         raw_data = raw_data.drop('Label', axis=1)
         correlated_features(raw_data)
 
-elif execute == 4:
+elif execute == 5:
     with keep.running() as k:
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
         raw_data = raw_data.drop('index', axis=1)
@@ -125,7 +136,7 @@ elif execute == 4:
         pairplot(raw_data_numeric, 'Normal', 2500)
 
 
-elif execute == 5:
+elif execute == 6:
     with keep.running() as k:
         #https://tahera-firdose.medium.com/lasso-regression-a-comprehensive-guide-to-feature-selection-and-regularization-2c6a20b61e23
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
@@ -136,7 +147,7 @@ elif execute == 5:
         raw_data.is_sm_ips_ports = raw_data.is_sm_ips_ports.astype('bool')
         reduce_features_lasso_balanced(raw_data)
 
-elif execute == 6:
+elif execute == 7:
     with keep.running() as k:
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
         raw_data = raw_data.drop('Stime', axis=1)
@@ -147,13 +158,13 @@ elif execute == 6:
         raw_data = raw_data.drop('Spkts', axis=1)
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
-elif execute == 7:
+elif execute == 8:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=0)
         train_reduce_test(raw_data, ['svm'], ['Normal'], 100000)
 
 
-elif execute == 8:
+elif execute == 9:
     with keep.running() as k:
         raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_std.csv')
         print(raw_data.head())

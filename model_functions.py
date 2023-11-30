@@ -29,15 +29,15 @@ def evaluate_model_cm(clf, X, y, cv, cm_name='conf-mat-agg'):
     actual_labels_accum = np.array([])
     score = np.zeros(cv.get_n_splits([X, y]))
     i = 0
-    ca = np.zeros((y.nunique(), y.nunique()))
+    conf_mat_accum = np.zeros((y.nunique(), y.nunique()))
     for train_ix, test_ix in cv.split(X, y):
         train_x, test_x = X.loc[X.index[train_ix]], X.loc[X.index[test_ix]]
         train_y, test_y = y.loc[y.index[train_ix]], y.loc[y.index[test_ix]]
         #print(test_y.value_counts())
         classifier = clf.fit(train_x, train_y)
         predicted_labels = classifier.predict(test_x)
-        cm = confusion_matrix(test_y, predicted_labels)
-        ca = np.add(ca, cm)
+        conf_mat = confusion_matrix(test_y, predicted_labels)
+        conf_mat_accum = np.add(conf_mat_accum, conf_mat)
         predicted_labels_accum = np.append(predicted_labels_accum, predicted_labels)
         actual_labels_accum = np.append(actual_labels_accum, test_y)
         score[i] = accuracy_score(test_y, predicted_labels)
@@ -60,13 +60,13 @@ def evaluate_model_cm(clf, X, y, cv, cm_name='conf-mat-agg'):
     plt.figure(figsize=(15, 15))
     ax = plt.subplot(1, 1, 1)
     ax.grid(False)
-    disp = ConfusionMatrixDisplay(confusion_matrix=ca.astype(int), display_labels=clf.classes_)
+    disp = ConfusionMatrixDisplay(confusion_matrix=conf_mat_accum.astype(int), display_labels=clf.classes_)
     disp.plot(values_format='', ax=ax, cmap='Blues')
     plt.xticks(rotation=45)
     # plt.grid(False)
     # plt.show()
     plt.savefig(test_classifiers_figs_dir() + '/' + str(y.nunique()) + '-class-confusion-map.png')
-    mpu.io.write(external_data_dir() + '/' + cm_name+'.pickle', ca)
+    mpu.io.write(external_data_dir() + '/' + cm_name+'.pickle', conf_mat_accum)
 
 
 def grid_search(classifier, param_grid, X, y):
