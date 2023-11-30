@@ -40,11 +40,30 @@ def info(raw_data):
     print(raw_data.duplicated(subset=None, keep='first').sum())
 
 
+def read_prepared_data(unsw_prepared_data):
+    print("reading data")
+    raw_data_list = []
+
+    for filename in unsw_prepared_data():
+        raw_data_part = pd.read_csv(dataset_dir() + "/" + filename, sep=",", header=True,
+                                    dtype={'sport': 'string', 'dsport': 'string', 'attack_cat': 'string'},
+                                    converters={'ct_ftp_cmd': empty_string_to_nan, 'is_ftp_login': empty_string_to_nan,
+                                                'ct_flw_http_mthd': empty_string_to_nan},
+                                    encoding='ISO-8859-1')
+        raw_data_list.append(raw_data_part)
+
+    raw_data = pd.concat(raw_data_list)
+    raw_data.drop_duplicates(inplace=True, subset=None, keep='first')
+    clean_data(raw_data)
+    return raw_data
+
+
 def read_data(unsw_data, test):
     print("reading data")
     raw_data_list = []
     column_names = pd.read_csv(dataset_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
     column_names['Name'] = column_names['Name'].str.strip()
+    column_names['Name'] = column_names['Name'].str.lower()
 
     for filename in unsw_data(test):
         raw_data_part = pd.read_csv(dataset_dir() + "/" + filename, sep=",", header=None,

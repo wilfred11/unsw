@@ -119,6 +119,7 @@ def numeric_feature_inspection(raw_data):
     column_props = pd.DataFrame()
     columns_info = pd.read_csv(dataset_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
     columns_info['Name'] = columns_info['Name'].str.strip()
+    columns_info['Name'] = columns_info['Name'].str.lower()
     name_desc_dict = dict(zip(columns_info.Name, columns_info.Description))
 
     c = numeric_features(raw_data)

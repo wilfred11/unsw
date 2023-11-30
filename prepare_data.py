@@ -90,9 +90,9 @@ def get_balanced_dataset(raw_data, size):
 
 def remove_low_variance_columns(raw_data):
     attack_cat = raw_data.attack_cat.copy()
-    Label = raw_data.Label.copy()
+    label = raw_data.label.copy()
     raw_data = raw_data.drop('attack_cat', axis=1)
-    raw_data = raw_data.drop('Label', axis=1)
+    raw_data = raw_data.drop('label', axis=1)
 
     var_thr = VarianceThreshold(threshold=0.00001)
     var_thr.fit(raw_data)
@@ -105,7 +105,7 @@ def remove_low_variance_columns(raw_data):
         raw_data = raw_data.drop(col, axis=1)
 
     raw_data['attack_cat'] = attack_cat
-    raw_data['Label'] = Label
+    raw_data['label'] = label
     return raw_data
 
 
@@ -153,10 +153,10 @@ def prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, exclude_oth
 def remove_target_columns(raw_data, multi=False):
     if not multi:
         X = raw_data.drop('attack_cat', axis=1).copy()
-        X = X.drop('Label', axis=1)
+        X = X.drop('label', axis=1)
         y = raw_data.Label.copy()
     else:
-        X = raw_data.drop('Label', axis=1).copy()
+        X = raw_data.drop('label', axis=1).copy()
         X = X.drop('attack_cat', axis=1)
         y = raw_data.attack_cat.copy()
 

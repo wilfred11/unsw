@@ -19,8 +19,15 @@ def unsw_data(test):
         return ['UNSW-NB15_1.csv']
 
 
+def unsw_prepared_traindata():
+    return ['UNSW_NB15_training-set.csv']
+
+def unsw_prepared_testdata():
+    return ['UNSW_NB15_testing-set.csv']
+
+
 def non_numeric_features():
-    return ['proto', 'service', 'state', 'is_ftp_login', 'is_sm_ips_ports', 'attack_cat', 'Label']
+    return ['proto', 'service', 'state', 'is_ftp_login', 'is_sm_ips_ports', 'attack_cat', 'label']
 
 
 def numeric_features(raw_data):
@@ -33,13 +40,13 @@ def features_to_be_denominalized():
 
 def non_numeric_features_to_keep(include_targets=True):
     if include_targets == True:
-        return ['is_ftp_login', 'is_sm_ips_ports', 'attack_cat', 'Label']
+        return ['is_ftp_login', 'is_sm_ips_ports', 'attack_cat', 'label']
     else:
         return ['is_ftp_login', 'is_sm_ips_ports']
 
 
 def irrelevant_features():
-    return ['Ltime', 'Stime', 'srcip', 'sport', 'dstip', 'dsport']
+    return ['ltime', 'stime', 'srcip', 'sport', 'dstip', 'dsport']
 
 
 def ip_port_features():

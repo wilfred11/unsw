@@ -2,8 +2,8 @@ import pandas as pd
 import seaborn as sns
 from pandas import read_csv
 from create_figures import create_results_plot_all, correlated_features, pairplot, my_umap
-from functions import unsw_data, cleanup_project_dirs, external_data_dir
-from read_data import read_data, info
+from functions import unsw_data, cleanup_project_dirs, external_data_dir, unsw_prepared_traindata
+from read_data import read_data, info, read_prepared_data
 from inspect_data import numeric_feature_inspection, inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize, min_max, handle_categorical_data, reduce_categories, \
     prepare_data_for_umap, get_balanced_dataset, remove_low_variance_columns
@@ -18,7 +18,7 @@ test = False
 # execute=4 lasso, remove features, save adapted dataset
 
 
-execute = 3
+execute = 4
 
 sns.set_style("darkgrid")
 
@@ -52,6 +52,7 @@ elif execute == 1:
         raw_data = pd.DataFrame()
 
         raw_data = read_data(unsw_data, test)
+        # raw_data = read_prepared_data(unsw_prepared_traindata())
 
         info(raw_data)
 
@@ -62,7 +63,7 @@ elif execute == 1:
         # TODO handle outliers
         raw_data = min_max(raw_data)
 
-        raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std.csv', index=False)
+        # raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std.csv', index=False)
 
         raw_data_balanced = get_balanced_dataset(raw_data, 2000000)
 
@@ -75,7 +76,6 @@ elif execute == 1:
 
         print(raw_data.shape)
         print(raw_data.head())
-
 
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
@@ -112,7 +112,7 @@ elif execute == 4:
         raw_data = raw_data.drop('index', axis=1)
         raw_data.reset_index(drop=True, inplace=True)
         raw_data = raw_data.drop('attack_cat', axis=1)
-        raw_data = raw_data.drop('Label', axis=1)
+        raw_data = raw_data.drop('label', axis=1)
         correlated_features(raw_data)
 
 elif execute == 5:
@@ -138,7 +138,7 @@ elif execute == 5:
 
 elif execute == 6:
     with keep.running() as k:
-        #https://tahera-firdose.medium.com/lasso-regression-a-comprehensive-guide-to-feature-selection-and-regularization-2c6a20b61e23
+        # https://tahera-firdose.medium.com/lasso-regression-a-comprehensive-guide-to-feature-selection-and-regularization-2c6a20b61e23
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
         raw_data = raw_data.drop('index', axis=1)
         raw_data.reset_index(drop=True, inplace=True)
@@ -150,12 +150,12 @@ elif execute == 6:
 elif execute == 7:
     with keep.running() as k:
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
-        raw_data = raw_data.drop('Stime', axis=1)
-        raw_data = raw_data.drop('Ltime', axis=1)
+        raw_data = raw_data.drop('stime', axis=1)
+        raw_data = raw_data.drop('ltime', axis=1)
         raw_data = raw_data.drop('dloss', axis=1)
-        raw_data = raw_data.drop('Dpkts', axis=1)
+        raw_data = raw_data.drop('dpkts', axis=1)
         raw_data = raw_data.drop('swin', axis=1)
-        raw_data = raw_data.drop('Spkts', axis=1)
+        raw_data = raw_data.drop('spkts', axis=1)
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
 elif execute == 8:
