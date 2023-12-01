@@ -2,7 +2,7 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 import umap.umap_ as umap
-#import umap.plot as umap_plot
+# import umap.plot as umap_plot
 
 from matplotlib import pyplot as plt
 from functions import test_classifiers_dir, figures_dir, feature_reduction_dir, external_data_dir
@@ -68,7 +68,7 @@ def pairplot(raw_data, attack_cat, size):
     https://www.shedloadofcode.com/blog/eight-ways-to-perform-feature-selection-with-scikit-learn
     """
 
-    b_raw_data = get_balanced_dataset(raw_data,  size)
+    b_raw_data = get_balanced_dataset(raw_data, size)
     b_raw_data.drop(['Label'], inplace=True, axis=1)
     b_raw_data.drop(['attack_cat'], inplace=True, axis=1)
     cols = b_raw_data.columns.to_list()
@@ -92,9 +92,9 @@ def my_umap(raw_data):
     # https://www.kaggle.com/code/btseytlin/interactive-visualization-with-umap-and-bokeh
     # https://datagy.io/matplotlib-3d-scatterplot/
     # https://datagy.io/python-seaborn-scatterplot/
-    #attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, 'Normal', 5000)
+    # attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, 'Normal', 5000)
 
-    #y_, uniques = pd.factorize(attack_cat_data.attack_cat, sort=True)
+    # y_, uniques = pd.factorize(attack_cat_data.attack_cat, sort=True)
     y_, uniques = pd.factorize(raw_data.attack_cat, sort=True)
     y_uniques = np.unique(y_)
     X = raw_data.drop('Label', axis=1)

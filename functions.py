@@ -19,11 +19,9 @@ def unsw_data(test):
         return ['UNSW-NB15_1.csv']
 
 
-def unsw_prepared_traindata():
-    return ['UNSW_NB15_training-set.csv']
+def unsw_prepared_data():
+    return ['UNSW_NB15_training-set.csv', 'UNSW_NB15_testing-set.csv']
 
-def unsw_prepared_testdata():
-    return ['UNSW_NB15_testing-set.csv']
 
 
 def non_numeric_features():
@@ -51,6 +49,12 @@ def irrelevant_features():
 
 def ip_port_features():
     return ['srcip', 'sport', 'dstip', 'dsport']
+
+
+def correct_col_names():
+    fix = {'ct_src_ ltm': 'ct_src_ltm', 'dintpkt': 'dinpkt', 'dmeansz': 'dmean', 'res_bdy_len': 'response_body_len',
+           'sintpkt': 'sinpkt', 'smeansz': 'smean'}
+    return fix
 
 
 def denominalized_and_boolean_features(raw_data, include_targets=False):

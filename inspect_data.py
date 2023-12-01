@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import seaborn as sns
 import scipy
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.model_selection import GridSearchCV
@@ -10,7 +11,7 @@ from numpy import where
 from sklearn.cluster import Birch
 from matplotlib import pyplot, pyplot as plt
 from functions import numeric_features, data_dir, read_prepare_dir, external_data_dir, read_prepare_figs_dir, \
-    dataset_dir
+    dataset_dir, correct_col_names
 
 
 def crosstab_service_to_attack_cat(raw_data):
@@ -84,7 +85,7 @@ def inspect_for_empty_or_na_columns(raw_data):
     data_empty.to_csv(read_prepare_dir() + '/' + 'columns_empty_count.csv')
 
 
-def feature_props(column_values, column_props_global, column_name, column_description, size):
+def feature_props(raw_data, column_values, column_props_global, column_name, column_description, size):
     column_values_sampled = column_values.sample(size, random_state=0)
     feat_props = {'name': column_name, 'description': column_description,
                   'max_value': column_values.max(),
@@ -98,10 +99,16 @@ def feature_props(column_values, column_props_global, column_name, column_descri
     column_props_global.to_excel(read_prepare_dir() + '/' + 'column-props.xlsx')
 
     plt.figure(figsize=(8, 5))
-    hist_values, bin_edges = np.histogram(column_values_sampled, bins=20)
-    plt.bar(x=bin_edges[:-1], height=hist_values / len(column_values_sampled), width=np.diff(bin_edges), align='edge')
-    plt.xlabel(column_name)
+    sns.kdeplot(x=raw_data[column_name], hue=raw_data['label'], legend=True)
+    plt.legend(labels=['Attack', 'Normal'])
     plt.savefig(read_prepare_figs_dir() + '/' + column_name.replace('_', '-') + '-hist.png')
+
+
+    """
+    hist_values, bin_edges = np.histogram(column_values_sampled, bins=20)
+    plt.bar(x=bin_edges[:-1], height=hist_values / len(column_values_sampled), width=np.diff(bin_edges), align='edge', hue=raw_data['label'])
+    plt.xlabel(column_name)
+    plt.savefig(read_prepare_figs_dir() + '/' + column_name.replace('_', '-') + '-hist.png')"""
 
     plt.close('all')
 
@@ -120,6 +127,9 @@ def numeric_feature_inspection(raw_data):
     columns_info = pd.read_csv(dataset_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
     columns_info['Name'] = columns_info['Name'].str.strip()
     columns_info['Name'] = columns_info['Name'].str.lower()
+    columns_info['Name'] = columns_info['Name'].apply(
+        lambda x: correct_col_names()[x] if x in correct_col_names() else x)
+
     name_desc_dict = dict(zip(columns_info.Name, columns_info.Description))
 
     c = numeric_features(raw_data)
@@ -128,5 +138,6 @@ def numeric_feature_inspection(raw_data):
     for feature_name, feature_values in rd.items():
         print(feature_name)
         print('#', i)
-        column_props = feature_props(feature_values, column_props, feature_name, name_desc_dict[feature_name], 250000)
+        column_props = feature_props(raw_data, feature_values, column_props, feature_name, name_desc_dict[feature_name],
+                                     250000)
         i = i + 1

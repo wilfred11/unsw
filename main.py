@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 from pandas import read_csv
 from create_figures import create_results_plot_all, correlated_features, pairplot, my_umap
-from functions import unsw_data, cleanup_project_dirs, external_data_dir, unsw_prepared_traindata, dataset_dir
+from functions import unsw_data, cleanup_project_dirs, external_data_dir, dataset_dir, correct_col_names, unsw_prepared_data
 from read_data import read_data, info, read_prepared_data
 from inspect_data import numeric_feature_inspection, inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize, min_max, handle_categorical_data, reduce_categories, \
@@ -18,10 +18,9 @@ test = False
 # execute=4 lasso, remove features, save adapted dataset
 
 
-execute = 0
+execute = 4
 
 sns.set_style("darkgrid")
-
 
 if execute == 12:
     with keep.running() as k:
@@ -46,31 +45,6 @@ if execute == 12:
 
         # outliers(raw_data, n_neighbors)
 
-elif execute == 0:
-    with keep.running() as k:
-        cleanup_project_dirs()
-        raw_data = pd.DataFrame()
-        #raw_data = read_data(unsw_data, test)
-        raw_data = read_prepared_data(unsw_prepared_traindata())
-        print(raw_data.columns)
-        print(raw_data.shape)
-
-        column_names = pd.read_csv(dataset_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
-        column_names['Name'] = column_names['Name'].str.strip()
-        column_names['Name'] = column_names['Name'].str.lower()
-        cnm = raw_data.columns.to_list()
-        t = column_names.Name.to_list()
-        print(cnm)
-        print(t)
-        temp3 = []
-        for element in t:
-            if element not in cnm:
-                temp3.append(element)
-        print(temp3)
-        #cnm.compare(t)
-        #print(cnm.compare(t, align_axis=1))
-        #column_names.set_index('Locality', inplace=True)
-
 elif execute == 1:
     with keep.running() as k:
         cleanup_project_dirs()
@@ -78,13 +52,20 @@ elif execute == 1:
         raw_data = pd.DataFrame()
 
         raw_data = read_data(unsw_data, test)
-        # raw_data = read_prepared_data(unsw_prepared_traindata())
+        print(len(raw_data.columns))
+        """train_data = read_prepared_data(unsw_prepared_data())
+        print(len(train_data.columns))
+        
+        raw_data = pd.concat([raw_data, train_data])
+
+        raw_data.drop_duplicates(inplace=True, subset=None, keep='first')"""
 
         info(raw_data)
 
         inspect_for_empty_or_na_columns(raw_data)
 
         numeric_feature_inspection(raw_data)
+
 
         # TODO handle outliers
         raw_data = min_max(raw_data)
@@ -176,12 +157,10 @@ elif execute == 6:
 elif execute == 7:
     with keep.running() as k:
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
-        raw_data = raw_data.drop('stime', axis=1)
-        raw_data = raw_data.drop('ltime', axis=1)
         raw_data = raw_data.drop('dloss', axis=1)
         raw_data = raw_data.drop('dpkts', axis=1)
         raw_data = raw_data.drop('swin', axis=1)
-        raw_data = raw_data.drop('spkts', axis=1)
+        #raw_data = raw_data.drop('spkts', axis=1)
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
 elif execute == 8:

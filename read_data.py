@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from functions import empty_string_to_nan, irrelevant_features, external_data_dir, figures_dir, data_dir, \
-    read_prepare_dir, dataset_dir
+    read_prepare_dir, dataset_dir, correct_col_names
 
 
 def clean_data(raw_data):
@@ -14,8 +14,18 @@ def clean_data(raw_data):
     raw_data['attack_cat'] = raw_data['attack_cat'].replace('Backdoor', 'Backdoors')
     raw_data.is_ftp_login = raw_data.is_ftp_login.astype('bool')
     raw_data.is_sm_ips_ports = raw_data.is_sm_ips_ports.astype('bool')
-    # for feat in irrelevant_features():
-    #    raw_data.drop(feat, axis=1, inplace=True)
+    raw_data.drop(columns=irrelevant_features(), axis=1, inplace=True)
+    return raw_data
+
+
+def clean_data_1(raw_data):
+    print('cleaning prepared data')
+    raw_data.is_ftp_login = raw_data.is_ftp_login.astype('bool')
+    raw_data.is_sm_ips_ports = raw_data.is_sm_ips_ports.astype('bool')
+    #print(raw_data.columns)
+    #print(len(raw_data.columns))
+    # raw_data = raw_data.drop('rate', axis=1)
+    raw_data.drop(columns=['id', 'rate'], axis=1, inplace=True)
     return raw_data
 
 
@@ -41,7 +51,7 @@ def info(raw_data):
 
 
 def read_prepared_data(unsw_prepared_data):
-    print("reading data")
+    print("reading train and test data")
     raw_data_list = []
 
     for filename in unsw_prepared_data:
@@ -54,7 +64,7 @@ def read_prepared_data(unsw_prepared_data):
 
     raw_data = pd.concat(raw_data_list)
     raw_data.drop_duplicates(inplace=True, subset=None, keep='first')
-    clean_data(raw_data)
+    clean_data_1(raw_data)
     return raw_data
 
 
@@ -64,6 +74,8 @@ def read_data(unsw_data, test):
     column_names = pd.read_csv(dataset_dir() + "/" + 'UNSW-NB15_features.csv', encoding='ISO-8859-1')
     column_names['Name'] = column_names['Name'].str.strip()
     column_names['Name'] = column_names['Name'].str.lower()
+    column_names['Name'] = column_names['Name'].apply(
+        lambda x: correct_col_names()[x] if x in correct_col_names() else x)
 
     for filename in unsw_data(test):
         raw_data_part = pd.read_csv(dataset_dir() + "/" + filename, sep=",", header=None,
@@ -75,10 +87,7 @@ def read_data(unsw_data, test):
         raw_data_list.append(raw_data_part)
 
     raw_data = pd.concat(raw_data_list)
-    raw_data.drop_duplicates(inplace=True, subset=None, keep='first')
-
-    if test:
-        raw_data = raw_data.sample(frac=0.75)
 
     clean_data(raw_data)
+    raw_data.drop_duplicates(inplace=True, subset=None, keep='first')
     return raw_data
