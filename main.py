@@ -1,3 +1,5 @@
+import mpu
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from pandas import read_csv
@@ -178,6 +180,16 @@ elif execute == 9:
         raw_data = reduce_categories(raw_data)
         raw_data = denominalize(raw_data)
         my_umap(raw_data)
+
+
+elif execute == 10:
+    with keep.running() as k:
+        model = mpu.io.read(external_data_dir() + '/' + 'conf-mat-agg_1.pickle')
+        model1 = mpu.io.read(external_data_dir() + '/' + 'conf-mat-agg_1.pickle')
+        print(np.subtract(model, model1))
+        #model = pickle.load(external_data_dir() + "/" + 'conf-mat-agg_1.pickle')
+        #print(model)
+        #results = pd.read_pickle(external_data_dir() + "/" + 'conf-mat-agg_1.pickle', compression='infer')
 
 
 else:

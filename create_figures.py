@@ -3,12 +3,25 @@ import seaborn as sns
 import pandas as pd
 import umap.umap_ as umap
 # import umap.plot as umap_plot
-
 from matplotlib import pyplot as plt
 from functions import test_classifiers_dir, figures_dir, feature_reduction_dir, external_data_dir
 from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns, get_balanced_dataset
 from math import ceil
 
+
+def col_countplot(col, raw_data):
+    #https://medium.com/@ subrata.maji16/building-an-intrusion-detection-system-on-unsw-nb15-dataset-based-on-machine-learning-algorithm-16b1600996f5
+    """
+    This function plots countplot of a given feature for train      dataset
+    """
+    fig, ax = plt.subplots(figsize=(8,4))
+    sns.set_style('whitegrid')
+    # countplot of the given column
+    ax = sns.countplot(x=col, hue='label', data=raw_data)
+    ax.legend(loc="upper right", labels=('normal', 'attack'))
+    ax.set_title("train data")
+    plt.xticks(rotation=45)
+    plt.show()
 
 def read_results():
     results = pd.read_pickle(test_classifiers_dir() + "/" + 'clf_results_post.pkl', compression='infer')
