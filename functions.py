@@ -44,7 +44,7 @@ def non_numeric_features_to_keep(include_targets=True):
 
 
 def irrelevant_features():
-    return ['ltime', 'stime', 'srcip', 'sport', 'dstip', 'dsport']
+    return ['srcip', 'sport', 'dstip', 'dsport']
 
 
 def ip_port_features():
