@@ -2,9 +2,14 @@ import mpu
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib import pyplot as plt
 from pandas import read_csv
-from create_figures import create_results_plot_all, correlated_features, pairplot, my_umap
-from functions import unsw_data, cleanup_project_dirs, external_data_dir, dataset_dir, correct_col_names, unsw_prepared_data
+from sklearn.metrics import ConfusionMatrixDisplay
+
+from create_figures import correlated_features, pairplot, my_umap, generate_graph_for_results
+from functions import unsw_data, cleanup_project_dirs, external_data_dir, dataset_dir, correct_col_names, \
+    unsw_prepared_data
+from neural_network import go_neural
 from read_data import read_data, info, read_prepared_data
 from inspect_data import numeric_feature_inspection, inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize, min_max, handle_categorical_data, reduce_categories, \
@@ -20,18 +25,19 @@ test = False
 # execute=4 lasso, remove features, save adapted dataset
 
 
-execute = 4
+execute = 15
 
 sns.set_style("darkgrid")
 
-if execute == 12:
+if execute == 14:
     with keep.running() as k:
-        raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=None)
+        pass
+        #raw_data = pd.read_csv(external_data_dir() + '/' + 'raw_data_prepared.csv', index_col=None)
 
         # test_classifiers(raw_data, test)
-        test_classifiers(raw_data, test, ['dt', 'svm'], 1000)
+        #test_classifiers(raw_data, test, ['dt', 'svm'], 1000)
 
-        create_results_plot_all()
+        #create_results_plot_all()
 
         # TODO find optimal features
         # TODO train model with optimal features
@@ -55,19 +61,12 @@ elif execute == 1:
 
         raw_data = read_data(unsw_data, test)
         print(len(raw_data.columns))
-        """train_data = read_prepared_data(unsw_prepared_data())
-        print(len(train_data.columns))
-        
-        raw_data = pd.concat([raw_data, train_data])
-
-        raw_data.drop_duplicates(inplace=True, subset=None, keep='first')"""
 
         info(raw_data)
 
         inspect_for_empty_or_na_columns(raw_data)
 
         numeric_feature_inspection(raw_data)
-
 
         # TODO handle outliers
         raw_data = min_max(raw_data)
@@ -102,7 +101,7 @@ elif execute == 2:
         print(raw_data.shape)
         print(raw_data.head(5))
         print(raw_data.columns)
-        test_classifiers_basic(raw_data, ['dt'], 5000, scoring=False, cm=True, cm_name='conf-mat-agg_1')
+        test_classifiers_basic(raw_data, ['dt'], 2000000, scoring=False, cm=True, cm_name='conf-mat-agg_post_lasso')
 
 elif execute == 3:
     with keep.running() as k:
@@ -159,10 +158,10 @@ elif execute == 6:
 elif execute == 7:
     with keep.running() as k:
         raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
-        raw_data = raw_data.drop('dloss', axis=1)
-        raw_data = raw_data.drop('dpkts', axis=1)
-        raw_data = raw_data.drop('swin', axis=1)
-        #raw_data = raw_data.drop('spkts', axis=1)
+        #raw_data = raw_data.drop('dloss', axis=1)
+        #raw_data = raw_data.drop('dpkts', axis=1)
+        #raw_data = raw_data.drop('swin', axis=1)
+        raw_data = raw_data.drop('spkts', axis=1)
         raw_data.to_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv', index=False)
 
 elif execute == 8:
@@ -184,12 +183,56 @@ elif execute == 9:
 
 elif execute == 10:
     with keep.running() as k:
-        model = mpu.io.read(external_data_dir() + '/' + 'conf-mat-agg_1.pickle')
-        model1 = mpu.io.read(external_data_dir() + '/' + 'conf-mat-agg_1.pickle')
-        print(np.subtract(model, model1))
-        #model = pickle.load(external_data_dir() + "/" + 'conf-mat-agg_1.pickle')
-        #print(model)
-        #results = pd.read_pickle(external_data_dir() + "/" + 'conf-mat-agg_1.pickle', compression='infer')
+        model = mpu.io.read(external_data_dir() + '/' + 'conf-mat-agg_post_lasso.pickle')
+        model1 = mpu.io.read(external_data_dir() + '/' + 'conf-mat-agg_post_corr.pickle')
+
+        cm = np.subtract(model, model1)
+        lbls = ['Analysis', 'Backdoors', 'DoS', 'Exploits', 'Fuzzers', 'Generic', 'Normal', 'Reconnaissance',
+                'Shellcode', 'Worms']
+        print(cm.astype(int))
+
+        plt.grid(False)
+        plt.figure(figsize=(15, 15))
+        ax = plt.subplot(1, 1, 1)
+        ax.grid(False)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=lbls)
+        disp.plot(values_format='', ax=ax, cmap='Blues', colorbar=True)
+        plt.xticks(rotation=45)
+        # plt.grid(False)
+        # plt.show()
+        plt.savefig(external_data_dir() + '/' + 'diff-class-confusion-map.png')
+
+        # model = pickle.load(external_data_dir() + "/" + 'conf-mat-agg_1.pickle')
+        # print(model)
+        # results = pd.read_pickle(external_data_dir() + "/" + 'conf-mat-agg_1.pickle', compression='infer')
+
+elif execute == 11:
+    with keep.running() as k:
+        raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
+        ct = pd.crosstab(raw_data['stcpb'], raw_data['label']).round(2)
+        print(ct)
+        ct.plot()
+        plt.show()
+
+elif execute == 12:
+    with keep.running() as k:
+        generate_graph_for_results()
+
+elif execute == 13:
+    with keep.running() as k:
+        results = pd.read_pickle(external_data_dir() + "/" + 'dt_params.pkl', compression='infer')
+        print(results)
+
+elif execute == 15:
+    raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
+    raw_data = raw_data.drop('index', axis=1)
+    raw_data = raw_data.drop('label', axis=1)
+    raw_data.reset_index(drop=True, inplace=True)
+
+
+    print(raw_data.columns)
+    go_neural(raw_data)
+
 
 
 else:
