@@ -10,11 +10,11 @@ from math import ceil
 
 
 def col_countplot(col, raw_data):
-    #https://medium.com/@ subrata.maji16/building-an-intrusion-detection-system-on-unsw-nb15-dataset-based-on-machine-learning-algorithm-16b1600996f5
+    # https://medium.com/@ subrata.maji16/building-an-intrusion-detection-system-on-unsw-nb15-dataset-based-on-machine-learning-algorithm-16b1600996f5
     """
     This function plots countplot of a given feature for train      dataset
     """
-    fig, ax = plt.subplots(figsize=(8,4))
+    fig, ax = plt.subplots(figsize=(8, 4))
     sns.set_style('whitegrid')
     # countplot of the given column
     ax = sns.countplot(x=col, hue='label', data=raw_data)
@@ -23,33 +23,24 @@ def col_countplot(col, raw_data):
     plt.xticks(rotation=45)
     plt.show()
 
-def read_results():
-    results = pd.read_pickle(test_classifiers_dir() + "/" + 'clf_results_post.pkl', compression='infer')
-    results.index.names = ['attack_cat', 'clf', 'score']
-    return results
 
-
-def create_results_plot_all():
-    results = read_results()
-    print(results.index.get_level_values('attack_cat').unique().to_list())
-    for attack_cat in results.index.get_level_values('attack_cat').unique().to_list():
-        create_results_plot(results, attack_cat)
-
-
-def create_results_plot(results, attack_cat):
-    results = results.query("attack_cat =='" + attack_cat + "'")
-    results = results.query("score == 'test_F1'")
+def generate_graph_for_results():
+    results = pd.read_pickle(external_data_dir() + "/" + 'clf_results_post-dt-svm-knn.pkl', compression='infer')
+    results = results.round(2)
+    results.index.names = ['dataset', 'clf', 'score']
+    print(results)
+    results.to_csv(external_data_dir() + '/' + 'results.csv')
+    results = results.query("score == 'test_accuracy'")
     results = results.droplevel(0, axis=0)
     results = results.droplevel(1, axis=0)
     results = results.T
     plt.figure(figsize=(12, 7))
-    plt.xlabel('testrun#')
-    plt.ylabel('F1 score')
+    plt.xlabel('Fold')
+    plt.ylabel('Accuracy score')
     plt.xticks(results.index.to_list())
-    sns.lineplot(data=results).set_title(
-        'Resultaten Normal<>' + (attack_cat if attack_cat != 'Normal' else 'alle aanvallen'))
+    sns.lineplot(data=results).set_title('Classifier accuracy results')
     plt.legend(title='')
-    plt.savefig(figures_dir() + '/' + attack_cat + '_results.png')
+    plt.savefig(figures_dir() + '/' + 'results.png')
 
 
 def correlated_features(raw_data):
