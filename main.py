@@ -9,7 +9,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from create_figures import correlated_features, pairplot, my_umap, generate_graph_for_results
 from functions import unsw_data, cleanup_project_dirs, external_data_dir, dataset_dir, correct_col_names, \
     unsw_prepared_data
-from neural_network import go_neural
+from neural_network import go_neural, go_neural1
 from read_data import read_data, info, read_prepared_data
 from inspect_data import numeric_feature_inspection, inspect_for_empty_or_na_columns
 from prepare_data import standardize, denominalize, min_max, handle_categorical_data, reduce_categories, \
@@ -224,14 +224,16 @@ elif execute == 13:
         print(results)
 
 elif execute == 15:
-    raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
-    raw_data = raw_data.drop('index', axis=1)
-    raw_data = raw_data.drop('label', axis=1)
-    raw_data.reset_index(drop=True, inplace=True)
+    go_neural1()
+    #raw_data = read_csv(external_data_dir() + '/' + 'raw_data_std_denom_var.csv')
+    #raw_data = raw_data.drop('index', axis=1)
+    #raw_data = raw_data.drop('label', axis=1)
+    #raw_data.reset_index(drop=True, inplace=True)
 
 
-    print(raw_data.columns)
-    go_neural(raw_data)
+    #print(raw_data.columns)
+    #go_neural(raw_data)
+
 
 
 

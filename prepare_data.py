@@ -82,7 +82,7 @@ def get_balanced_dataset(raw_data, size):
                                         n_samples=int(size / len(raw_data_tmp.attack_cat.unique())), random_state=0)
 
         X_complete = pd.concat([X_complete, X_attack_cat])
-        #print(X_complete.index.unique().value_counts())
+        print(X_complete.index.unique().value_counts())
 
     X_complete = X_complete.reset_index(level=None, drop=False, inplace=False, col_level=0, col_fill='')
     return X_complete
