@@ -4,6 +4,7 @@ import torch.nn as nn
 import math
 import numpy as np
 import pandas as pd
+import torch.nn.functional as F
 from sklearn.preprocessing import OneHotEncoder
 
 from functions import external_data_dir
@@ -17,18 +18,18 @@ class UNSWClassifier(nn.Module):
     def __init__(self, input_size, num_classes):
         super(UNSWClassifier, self).__init__()
         self.l1 = nn.Linear(input_size, 128)
-        nn.init.kaiming_normal_(self.l1.weight, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.l1.weight, mode='fan_in')
         nn.init.zeros_(self.l1.bias)
         # self.relu1 = nn.ReLU()
         self.l2 = nn.Linear(128, 64)
-        nn.init.kaiming_normal_(self.l2.weight, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.l2.weight, mode='fan_in')
         nn.init.zeros_(self.l2.bias)
         # self.relu2 = nn.ReLU()
         self.l3 = nn.Linear(64, 10)
-        nn.init.kaiming_normal_(self.l3.weight, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.l3.weight, mode='fan_in')
         nn.init.zeros_(self.l3.bias)
         self.relu3 = nn.ReLU()
-        nn.init.kaiming_normal_(self.l3.weight, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.l3.weight, mode='fan_in')
         nn.init.zeros_(self.l3.bias)
 
     def forward(self, x):
@@ -37,7 +38,7 @@ class UNSWClassifier(nn.Module):
         x = self.l2(x)
         # x = self.relu2(x)
         x = self.l3(x)
-        x = self.relu3(x)
+        # x = self.relu3(x)
         return x
 
 
@@ -58,7 +59,7 @@ def prepare_dataframe(size):
                      encoding='utf8')
 
     ds = get_balanced_dataset(ds, size)
-
+    #Todo outliers
     enc = OneHotEncoder(handle_unknown='ignore')
     y_df = pd.DataFrame(enc.fit_transform(ds[['attack_cat']]).toarray())
 
@@ -76,7 +77,7 @@ def prepare_dataframe(size):
     # y= ds.attack_cat
 
     x.to_csv(external_data_dir() + '/' + 'raw_data_x_nn.csv', index=False)
-    #ds.attack_cat.to_frame().to_csv(external_data_dir() + '/' + 'raw_data_y_nn.csv', index=False)
+    # ds.attack_cat.to_frame().to_csv(external_data_dir() + '/' + 'raw_data_y_nn.csv', index=False)
     y_df.to_csv(external_data_dir() + '/' + 'raw_data_y_nn.csv', index=False)
 
 
@@ -84,7 +85,6 @@ class MyDataSet(Dataset):
     def __init__(self):
         x = np.loadtxt(external_data_dir() + '/' + 'raw_data_x_nn.csv', delimiter=",", dtype=np.float32, skiprows=1,
                        encoding="UTF-8", max_rows=10000, ndmin=2)
-
 
         y = np.loadtxt(external_data_dir() + '/' + 'raw_data_y_nn.csv', delimiter=",",
                        skiprows=1, dtype=np.float32, encoding="UTF-8", max_rows=10000)
@@ -123,7 +123,7 @@ def train(model, device, train_loader, optimizer, epoch):
         # loss = nn.functional.nll_loss(output, target)
         loss.backward()
         optimizer.step()
-        i = i+1
+        i = i + 1
         print(f"num of items in batch:{len(target)}")
 
 
@@ -151,6 +151,7 @@ def cross_validate(dataset):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Initialize the k-fold cross validation
+    #Todo stratified
     kf = KFold(n_splits=k_folds, shuffle=True)
 
     # Loop through each fold
@@ -200,18 +201,27 @@ def cross_validate(dataset):
                 print('output')
                 print(output)
                 test_loss = criterion(output, target)
+                # g=F.softmax(output, dim=1)
+                # print('g')
+                # print(g)
                 # test_loss += nn.functional.nll_loss(output, target, reduction="sum").item()
                 # only working when not using onehotencoding for targets
-                #pred = output.argmax(dim=1, keepdim=True)
-                #correct += pred.eq(target.view_as(pred)).sum().item()
+                # pred = output.argmax(dim=1, keepdim=True)
+                # correct += pred.eq(target.view_as(pred)).sum().item()
+
+                target_ = torch.Tensor.argmax(target, keepdim=True, dim=1)
+                output_ = torch.Tensor.argmax(output, keepdim=True, dim=1)
+                correct += output_.eq(target_.view_as(output_)).sum().item()
+                print(correct)
+
         # only working when not using onehotencoding for targets
-        #test_loss /= len(test_loader.dataset)
-        #accuracy = 100.0 * correct / len(test_loader.dataset)
+        test_loss /= len(test_loader.dataset)
+        accuracy = 100.0 * correct / len(test_loader.dataset)
 
         # Print the results for the current fold
         # only working when not using onehotencoding for targets
-        #print(
-        #    f"Test set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} ({accuracy:.2f}%)\n")
+        print(
+            f"Test set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} ({accuracy:.2f}%)\n")
 
 
 def go_neural1():
