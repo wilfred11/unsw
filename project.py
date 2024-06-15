@@ -1,69 +1,85 @@
 # import itertools
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import mpu
+from sklearn import svm
 from sklearn.linear_model import Lasso
-from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, ConfusionMatrixDisplay
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn import svm, linear_model
 from sklearn.tree import DecisionTreeClassifier
-from functions import test_classifiers_dir, feature_reduction_dir, features_to_be_denominalized, external_data_dir
-from model_functions import evaluate_model_scoring, grid_search, reduce_features_rfecv, evaluate_model_cm
-from prepare_data import prepare_data_for_specific_attack_cat, remove_target_columns, get_balanced_dataset
+
+from functions import test_classifiers_dir, feature_reduction_dir, external_data_dir
+from model_functions import (
+    evaluate_model_scoring,
+    grid_search,
+    reduce_features_rfecv,
+    evaluate_model_cm,
+)
+from prepare_data import (
+    prepare_data_for_specific_attack_cat,
+    remove_target_columns,
+    get_balanced_dataset,
+)
 
 
 # https://www.rasgoml.com/feature-engineering-tutorials/feature-selection-using-mutual-information-in-scikit-learn
 
 
-def test_classifiers_basic(raw_data, kinds, size, scoring, cm, cm_name='conf-mat-agg'):
+def test_classifiers_basic(raw_data, kinds, size, scoring, cm, cm_name="conf-mat-agg"):
     scores_pre = pd.DataFrame()
     scores_post = pd.DataFrame()
     optimal_params = {}
-    name = ''
+    name = ""
     for kind in kinds:
         optimal_params[kind] = pd.DataFrame()
-        name = name + '-' + kind
+        name = name + "-" + kind
 
-    print('**************************')
+    print("**************************")
     balanced_data = get_balanced_dataset(raw_data, size)
-    print('size bal. data', len(balanced_data))
+    print("size bal. data", len(balanced_data))
     print(balanced_data.attack_cat.value_counts())
     X, y = remove_target_columns(balanced_data, multi=True)
 
     for kind in kinds:
         clf = get_classifier(kind)
         param_grid = get_params(kind)
-        print('optimizing ' + kind)
+        print("optimizing " + kind)
         opt_params = grid_search(clf, param_grid, X, y)
         params = pd.DataFrame(opt_params[0], index=[0])
-        params_indexed = params.set_index([pd.Series('Balanced')])
+        params_indexed = params.set_index([pd.Series("Balanced")])
         optimal_params[kind] = pd.concat([optimal_params[kind], params_indexed])
 
         clf_opt = get_classifier(kind, opt_params[0])
         cv = StratifiedKFold(n_splits=10)
-        print('scoring ' + kind)
+        print("scoring " + kind)
         if scoring:
             scores_opt = evaluate_model_scoring(clf_opt, X, y, cv)
             scores_opt = scores_opt.T
             scores_opt = scores_opt.set_index(
-                [pd.Series('Balanced').repeat(len(scores_opt)), pd.Series(kind).repeat(len(scores_opt)),
-                 scores_opt.index.to_series()])
+                [
+                    pd.Series("Balanced").repeat(len(scores_opt)),
+                    pd.Series(kind).repeat(len(scores_opt)),
+                    scores_opt.index.to_series(),
+                ]
+            )
             scores_post = pd.concat([scores_post, scores_opt])
 
         if cm:
             evaluate_model_cm(clf_opt, X, y, cv, cm_name)
 
     for kind in kinds:
-        optimal_params[kind].to_excel(external_data_dir() + '/' + kind + '_params.xlsx')
-        optimal_params[kind].to_pickle(test_classifiers_dir() + '/' + kind + '_params.pkl')
+        optimal_params[kind].to_excel(external_data_dir() + "/" + kind + "_params.xlsx")
+        optimal_params[kind].to_pickle(
+            test_classifiers_dir() + "/" + kind + "_params.pkl"
+        )
 
     # scores_pre.to_pickle(test_classifiers_dir() + '/' + 'clf_results_pre.pkl')
     # scores_pre.to_excel(test_classifiers_dir() + '/' + 'clf_results_pre.xlsx')
-    scores_post.to_pickle(external_data_dir() + '/' + 'clf_results_post_' + name + '.pkl')
-    scores_post.to_excel(test_classifiers_dir() + '/' + 'clf_results_post.xlsx')
+    scores_post.to_pickle(
+        external_data_dir() + "/" + "clf_results_post_" + name + ".pkl"
+    )
+    scores_post.to_excel(test_classifiers_dir() + "/" + "clf_results_post.xlsx")
 
 
 def test_classifiers(raw_data, test, kinds, size, cats, pre):
@@ -71,84 +87,105 @@ def test_classifiers(raw_data, test, kinds, size, cats, pre):
     scores_pre = pd.DataFrame()
     scores_post = pd.DataFrame()
     optimal_params = {}
-    name = ''
+    name = ""
     for kind in kinds:
         optimal_params[kind] = pd.DataFrame()
-        name = name + '-' + kind
+        name = name + "-" + kind
 
     print(optimal_params)
     for attack_cat in cats:
-        print('**************************')
-        attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, size, denominalize=False,
-                                                               reduce_cats=False)
+        print("**************************")
+        attack_cat_data = prepare_data_for_specific_attack_cat(
+            raw_data, attack_cat, size, denominalize=False, reduce_cats=False
+        )
 
         X, y = remove_target_columns(attack_cat_data)
         for kind in kinds:
             clf = get_classifier(kind)
             if pre:
-                print('scoring ' + kind + ' ' + attack_cat)
+                print("scoring " + kind + " " + attack_cat)
                 scores = evaluate_model_scoring(clf, X, y)
                 scores = scores.T
                 scores = scores.set_index(
-                    [pd.Series(attack_cat).repeat(len(scores)), pd.Series(kind).repeat(len(scores)),
-                     scores.index.to_series()])
+                    [
+                        pd.Series(attack_cat).repeat(len(scores)),
+                        pd.Series(kind).repeat(len(scores)),
+                        scores.index.to_series(),
+                    ]
+                )
                 scores_pre = pd.concat([scores_pre, scores])
 
             pg = get_params(kind)
-            print('optimizing ' + kind + ' ' + attack_cat)
+            print("optimizing " + kind + " " + attack_cat)
             opt_params = grid_search(clf, pg, X, y)
             params = pd.DataFrame(opt_params[0], index=[0])
             params_indexed = params.set_index([pd.Series(attack_cat)])
             optimal_params[kind] = pd.concat([optimal_params[kind], params_indexed])
 
             clf_opt = get_classifier(kind, opt_params[0])
-            print('scoring ' + kind + ' ' + attack_cat)
+            print("scoring " + kind + " " + attack_cat)
             scores_opt = evaluate_model_scoring(clf_opt, X, y)
             scores_opt = scores_opt.T
             scores_opt = scores_opt.set_index(
-                [pd.Series(attack_cat).repeat(len(scores_opt)), pd.Series(kind).repeat(len(scores_opt)),
-                 scores_opt.index.to_series()])
+                [
+                    pd.Series(attack_cat).repeat(len(scores_opt)),
+                    pd.Series(kind).repeat(len(scores_opt)),
+                    scores_opt.index.to_series(),
+                ]
+            )
             scores_post = pd.concat([scores_post, scores_opt])
 
     for kind in kinds:
-        optimal_params[kind].to_excel(external_data_dir() + '/' + kind + '_params.xlsx')
-        optimal_params[kind].to_pickle(test_classifiers_dir() + '/' + kind + '_params.pkl')
-    scores_pre.to_pickle(test_classifiers_dir() + '/' + 'clf_results_pre.pkl')
-    scores_pre.to_excel(test_classifiers_dir() + '/' + 'clf_results_pre.xlsx')
-    scores_post.to_pickle(external_data_dir() + '/' + 'clf_results_post' + name + '.pkl')
-    scores_post.to_excel(test_classifiers_dir() + '/' + 'clf_results_post.xlsx')
+        optimal_params[kind].to_excel(external_data_dir() + "/" + kind + "_params.xlsx")
+        optimal_params[kind].to_pickle(
+            test_classifiers_dir() + "/" + kind + "_params.pkl"
+        )
+    scores_pre.to_pickle(test_classifiers_dir() + "/" + "clf_results_pre.pkl")
+    scores_pre.to_excel(test_classifiers_dir() + "/" + "clf_results_pre.xlsx")
+    scores_post.to_pickle(
+        external_data_dir() + "/" + "clf_results_post" + name + ".pkl"
+    )
+    scores_post.to_excel(test_classifiers_dir() + "/" + "clf_results_post.xlsx")
 
 
 def get_classifier(kind, params=None):
     match kind:
-        case 'lr':
+        case "lr":
             if params is None:
                 return LogisticRegression(max_iter=400)
             else:
-                return LogisticRegression(C=params['C'], penalty=params['penalty'],
-                                          max_iter=params['max_iter'],
-                                          solver=params['solver'],
-                                          dual=params['dual'], tol=params['tol'])
+                return LogisticRegression(
+                    C=params["C"],
+                    penalty=params["penalty"],
+                    max_iter=params["max_iter"],
+                    solver=params["solver"],
+                    dual=params["dual"],
+                    tol=params["tol"],
+                )
 
-        case 'svm':
+        case "svm":
             if params is None:
                 return svm.SVC()
             else:
-                return svm.SVC(C=params['C'], gamma=params['gamma'],
-                               kernel=params['kernel'])
+                return svm.SVC(
+                    C=params["C"], gamma=params["gamma"], kernel=params["kernel"]
+                )
 
-        case 'knn':
+        case "knn":
             if params is None:
                 return KNeighborsClassifier(n_neighbors=3)
             else:
-                return KNeighborsClassifier(n_neighbors=params['n_neighbors'], leaf_size=params['leaf_size'])
-        case 'dt':
+                return KNeighborsClassifier(
+                    n_neighbors=params["n_neighbors"], leaf_size=params["leaf_size"]
+                )
+        case "dt":
             if params is None:
                 return DecisionTreeClassifier()
             else:
-                return DecisionTreeClassifier(criterion=params['criterion'],
-                                              max_depth=params['max_depth'])
-        case 'lasso':
+                return DecisionTreeClassifier(
+                    criterion=params["criterion"], max_depth=params["max_depth"]
+                )
+        case "lasso":
             if params is None:
                 return Lasso()
             else:
@@ -159,20 +196,51 @@ def get_classifier(kind, params=None):
 
 def get_params(kind):
     match kind:
-        case 'dt':
-            return {'criterion': ['gini', 'entropy'],
-                    'max_depth': [4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 30, 40, 50, 70, 90, 120, 150]}
-        case 'svm':
-            return {'C': [0.5, 1, 10, 100], 'gamma': ['scale', 1, 0.1, 0.01, 0.001, 0.0001], 'kernel': ['rbf']}
-        case 'lr':
-            return {"C": np.logspace(0.1, 3, 30), "penalty": ["l1", "l2"], 'max_iter': [800, 1000, 1200],
-                    'solver': ['saga'], 'dual': [False], 'tol': [1e-3]}
-        case 'knn':
+        case "dt":
+            return {
+                "criterion": ["gini", "entropy"],
+                "max_depth": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    15,
+                    20,
+                    30,
+                    40,
+                    50,
+                    70,
+                    90,
+                    120,
+                    150,
+                ],
+            }
+        case "svm":
+            return {
+                "C": [0.5, 1, 10, 100],
+                "gamma": ["scale", 1, 0.1, 0.01, 0.001, 0.0001],
+                "kernel": ["rbf"],
+            }
+        case "lr":
+            return {
+                "C": np.logspace(0.1, 3, 30),
+                "penalty": ["l1", "l2"],
+                "max_iter": [800, 1000, 1200],
+                "solver": ["saga"],
+                "dual": [False],
+                "tol": [1e-3],
+            }
+        case "knn":
             leaf_size = list(range(1, 50))
             k_range = list(range(1, 31))
             return dict(n_neighbors=k_range, leaf_size=leaf_size)
-        case 'lasso':
-            return {'alpha': (np.logspace(-8, 8, 100))}
+        case "lasso":
+            return {"alpha": (np.logspace(-8, 8, 100))}
         case _:
             return
 
@@ -184,12 +252,12 @@ def reduce_features(raw_data, attack_cat):
     # params = get_params('dt')
     # reduce_features_shap(X, y, clf, params)
     # clf = get_classifier('svm')
-    lr_params = read_params('dt')
-    lr_params.index.name = 'attack_cat'
+    lr_params = read_params("dt")
+    lr_params.index.name = "attack_cat"
     # print(svm_params)
     params = lr_params.query("attack_cat =='" + attack_cat + "'")
-    print(params.to_dict('records'))
-    classifier = get_classifier('dt', params.to_dict('records')[0])
+    print(params.to_dict("records"))
+    classifier = get_classifier("dt", params.to_dict("records")[0])
     # print(params)
     reduce_features_rfecv(classifier, X, y)
 
@@ -209,24 +277,28 @@ def reduce_features_lasso_balanced(raw_data):
     y = pd.factorize(y)[0].astype(np.uint16)
     lasso = Lasso(alpha=0.00001, max_iter=25000, tol=1e-3)
     lasso.fit(X, y)
-    print('lasso coefficients:', lasso.coef_)
-    selected_indices = [idx for idx, element in enumerate(lasso.coef_) if condition(element)]
-    unselected_indices = [idx for idx, element in enumerate(lasso.coef_) if not condition(element)]
+    print("lasso coefficients:", lasso.coef_)
+    selected_indices = [
+        idx for idx, element in enumerate(lasso.coef_) if condition(element)
+    ]
+    unselected_indices = [
+        idx for idx, element in enumerate(lasso.coef_) if not condition(element)
+    ]
     selected_features = X.columns[selected_indices]
     unselected_features = X.columns[unselected_indices]
-    print('features to be kept:', selected_features)
-    print('features to be removed:', unselected_features)
+    print("features to be kept:", selected_features)
+    print("features to be removed:", unselected_features)
     nonzero_coefs = lasso.coef_[selected_indices]
     # Plot the feature coefficients
     plt.figure(figsize=(70, 120))
     plt.barh(range(len(nonzero_coefs)), nonzero_coefs, tick_label=selected_features)
-    plt.xlabel('Coefficient values', fontsize=45)
+    plt.xlabel("Coefficient values", fontsize=45)
     plt.yticks(fontsize=40)
     plt.xticks(fontsize=40)
-    plt.ylabel('Features', fontsize=45)
-    plt.title('Non zero feature Coefficients', fontsize=45)
+    plt.ylabel("Features", fontsize=45)
+    plt.title("Non zero feature Coefficients", fontsize=45)
     # plt.show()
-    plt.savefig(feature_reduction_dir() + '/figs/feature-coef.png')
+    plt.savefig(feature_reduction_dir() + "/figs/feature-coef.png")
 
 
 def train_reduce_test(raw_data, kinds, cats, size):
@@ -238,25 +310,20 @@ def train_reduce_test(raw_data, kinds, cats, size):
         optimal_params[kind] = pd.DataFrame()
 
         for attack_cat in cats:
-            attack_cat_data = prepare_data_for_specific_attack_cat(raw_data, attack_cat, 1000)
+            attack_cat_data = prepare_data_for_specific_attack_cat(
+                raw_data, attack_cat, 1000
+            )
             X, y = remove_target_columns(attack_cat_data)
             classifier = get_classifier(kind, params=None)
-            train_X, test_X, train_y, test_y = train_test_split(X, y, stratify=True, random_state=0)
+            train_X, test_X, train_y, test_y = train_test_split(
+                X, y, stratify=True, random_state=0
+            )
             classifier.fit(train_X, train_y)
             classifier.predict(test_X)
 
 
-def generate_accuracy_and_heatmap(model, x, y):
-    cm = confusion_matrix(y, model.predict(x))
-    sns.heatmap(cm, annot=True, fmt="d")
-    ac = accuracy_score(y, model.predict(x))
-    f_score = f1_score(y, model.predict(x))
-    print('Accuracy is: ', ac)
-    print('F1 score is: ', f_score)
-    print("\n")
-    return 1
-
-
 def read_params(kind):
-    results = pd.read_pickle(test_classifiers_dir() + "/" + kind + '_params.pkl', compression='infer')
+    results = pd.read_pickle(
+        test_classifiers_dir() + "/" + kind + "_params.pkl", compression="infer"
+    )
     return results
